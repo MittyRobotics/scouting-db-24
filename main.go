@@ -22,6 +22,7 @@ func main() {
 
 	allData := []data.Schema{}
 	tcp := [][]string{}
+	tcp = append(tcp, []string{"TeamName", "TeamNumber", "MatchNumber", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "LLVm", "Defense", "Notes"}) //hardcoded since migrated
 	db.Select("*").Find(&allData)
 	for _, val := range allData {
 		v := reflect.ValueOf(val)
@@ -50,7 +51,7 @@ func main() {
 	fmt.Println("llvm", tcp)
 	app := app.New()
 	current := app.NewWindow("TKO Crescendo Tracker (patented)")
-	current.Resize(fyne.NewSize(800, 600))
+	current.Resize(fyne.NewSize(1200, 600))
 	fmt.Println(allData)
 	//lvm
 	llvm := widget.NewTable(
@@ -67,6 +68,11 @@ func main() {
 			o.(*widget.Label).SetText(tcp[i.Row][i.Col]) //nop
 		},
 	)
+
+	//could change the code st
+	for i := 0; i < len(tcp); i++ {
+		llvm.SetColumnWidth(i, 100)
+	}
 
 	mainContainer := container.NewVSplit(llvm, widget.NewButton("test", func() {}))
 
