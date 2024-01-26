@@ -5,6 +5,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -51,8 +52,13 @@ func main() {
 	fmt.Println("llvm", tcp)
 	app := app.New()
 	current := app.NewWindow("TKO Crescendo Tracker (patented)")
+	settings := app.NewWindow("Settings")
+	settings.Resize(fyne.NewSize(600, 600))
 	current.Resize(fyne.NewSize(1200, 600))
+	current.SetFixedSize(true)
 	fmt.Println(allData)
+
+	current.SetMaster()
 	//lvm
 	llvm := widget.NewTable(
 		func() (int, int) {
@@ -74,7 +80,9 @@ func main() {
 		llvm.SetColumnWidth(i, 100)
 	}
 
-	mainContainer := container.NewVSplit(llvm, widget.NewButton("test", func() {}))
+	cont := container.NewVSplit(llvm, container.NewVBox(widget.NewButtonWithIcon("Settings", theme.SettingsIcon(), func() { settings.Show() }), widget.NewButtonWithIcon("Export", theme.FileImageIcon(), func() {}), widget.NewButtonWithIcon("Import", theme.InfoIcon(), func() {})))
+	cont.SetOffset(1) //clamps
+	mainContainer := cont
 
 	//migrate data and term[late
 	_ = db.AutoMigrate(&data.Schema{})
