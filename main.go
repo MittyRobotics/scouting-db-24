@@ -5,6 +5,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"gorm.io/driver/sqlite"
@@ -12,6 +13,7 @@ import (
 	"main/data"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 func main() {
@@ -54,8 +56,12 @@ func main() {
 	current := app.NewWindow("TKO Crescendo Tracker (patented)")
 	settings := app.NewWindow("Settings")
 	settings.Resize(fyne.NewSize(600, 600))
+	settings.SetFixedSize(true)
 	current.Resize(fyne.NewSize(1200, 600))
 	current.SetFixedSize(true)
+	settings.SetCloseIntercept(func() {
+		settings.Hide()
+	})
 	fmt.Println(allData)
 
 	current.SetMaster()
@@ -68,7 +74,7 @@ func main() {
 			return len(tcp), len(tcp[0])
 		},
 		func() fyne.CanvasObject {
-			return widget.NewLabel("test")
+			return widget.NewLabel("placeholder")
 		},
 		func(i widget.TableCellID, o fyne.CanvasObject) {
 			o.(*widget.Label).SetText(tcp[i.Row][i.Col]) //nop
@@ -79,8 +85,26 @@ func main() {
 	for i := 0; i < len(tcp); i++ {
 		llvm.SetColumnWidth(i, 100)
 	}
+	// ast exp := widget.New
+	cont := container.NewVSplit(llvm, container.NewVBox(widget.NewButtonWithIcon("Settings", theme.SettingsIcon(), func() { settings.Show() }), widget.NewButtonWithIcon("Export", theme.FileImageIcon(), func() {
+		llvm := dialog.NewFileSave(func(reader fyne.URIWriteCloser, err error) {
+			fmt.Println(err)
+			if err == nil && reader != nil {
 
-	cont := container.NewVSplit(llvm, container.NewVBox(widget.NewButtonWithIcon("Settings", theme.SettingsIcon(), func() { settings.Show() }), widget.NewButtonWithIcon("Export", theme.FileImageIcon(), func() {}), widget.NewButtonWithIcon("Import", theme.InfoIcon(), func() {})))
+				//write to file
+				total := ""
+				for _, val := range tcp {
+					total += strings.Join(val, ",") + "\n"
+				}
+				_, err = reader.Write([]byte(total))
+				if err != nil {
+					return
+				}
+				fmt.Println("write to file")
+			}
+		}, current)
+		llvm.Show()
+	}), widget.NewButtonWithIcon("Import", theme.InfoIcon(), func() {})))
 	cont.SetOffset(1) //clamps
 	mainContainer := cont
 
@@ -88,6 +112,7 @@ func main() {
 	_ = db.AutoMigrate(&data.Schema{})
 	//expressions ast
 	//db.Raw("GET WHERE name = 1")
+	//invoke com[
 	db.Create(&data.Schema{TeamName: "test", TeamNumber: 1, MatchNumber: 1, AutoAmps: 1, AutoSpeaker: 1, AutoLeave: true, AutoMiddle: true, TeleopAmps: 1, TeleopSpeaker: 1, Chain: true, Harmony: true, Trap: true, Park: true, Ground: true, Feeder: true, LLVm: "test", Defense: true, Notes: "test"})
 	current.SetContent(mainContainer)
 	current.ShowAndRun() //defer?
