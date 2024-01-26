@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
@@ -9,6 +10,7 @@ import (
 	"gorm.io/gorm"
 	"main/data"
 	"reflect"
+	"strconv"
 )
 
 func main() {
@@ -19,31 +21,50 @@ func main() {
 	}
 
 	allData := []data.Schema{}
+	tcp := [][]string{}
 	db.Select("*").Find(&allData)
+	for _, val := range allData {
+		v := reflect.ValueOf(val)
+		//expensive
+		fields := make([]interface{}, v.NumField()) //types
+		fmt.Println("fields: ", fields)
+		for j := 0; j < v.NumField(); j++ {
+			fields[j] = v.Field(j).Interface() //reflection my belobed
+		}
+		//opengl reference
+		//mmap syscall
+		vala := []string{}
+		for _, tcppacket := range fields {
+
+			if reflect.TypeOf(tcppacket) == reflect.TypeOf(gorm.Model{}) {
+				vala = append(vala, strconv.Itoa(int(tcppacket.(gorm.Model).ID)))
+			} else {
+				vala = append(vala, fmt.Sprintf("%v", tcppacket))
+			}
+
+		}
+		tcp = append(tcp, vala)
+
+	}
+
+	fmt.Println("llvm", tcp)
 	app := app.New()
 	current := app.NewWindow("TKO Crescendo Tracker (patented)")
 	current.Resize(fyne.NewSize(800, 600))
+	fmt.Println(allData)
 	//lvm
 	llvm := widget.NewTable(
 		func() (int, int) {
-			val := allData[0]
-			//assuming exsits and not acesing memaddr with nothing allloca egfault
-			v := reflect.ValueOf(val)
 
-			return len(allData), v.NumField()
+			//assuming exsits and not acesing memaddr with nothing allloca egfault
+
+			return len(tcp), len(tcp[0])
 		},
 		func() fyne.CanvasObject {
 			return widget.NewLabel("test")
 		},
 		func(i widget.TableCellID, o fyne.CanvasObject) {
-			v := reflect.ValueOf(allData[i.Row])
-			//expensive
-			fields := make([]interface{}, reflect.ValueOf(v).NumField()) //types
-			for i := 0; i < v.NumField(); i++ {
-				fields[i] = v.Field(i).Interface() //reflection my belobed
-			}
-
-			o.(*widget.Label).SetText(fields[i.Col].(string))
+			o.(*widget.Label).SetText(tcp[i.Row][i.Col]) //nop
 		},
 	)
 
