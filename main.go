@@ -71,6 +71,60 @@ func populate(db *gorm.DB, allData []data.Schema, tcp [][]string, fields []strin
 
 }
 
+func generateAverages(tcp [][]string) [][]string {
+	data := map[string]*[20]float64{}
+	//kv of teamnmae; data
+	totals := map[string]float64{}
+	//kv of teanmae: total values
+	for _, val := range tcp {
+		if val[1] != "TeamName" {
+			if _, ok := data[val[1]]; !ok {
+				data[val[1]] = &[20]float64{}
+				totals[val[1]] = 0
+			}
+			totals[val[1]]++
+			for i, vala := range val {
+
+				if i >= 4 && i <= 18 {
+					vald, err := strconv.Atoi(vala)
+					if err == nil {
+						//could use reflection
+						data[val[1]][i] += float64(vald) //ternaries could help
+					} else {
+						//boolean
+						if vala == "true" {
+							data[val[1]][i]++
+						}
+					}
+				} else {
+					data[val[1]][i] = 0 //edit memory address
+				}
+			}
+		}
+
+	}
+	totalsa := [][]string{}
+	totalsa = append(totalsa, []string{"ID", "TeamName", "TeamNumber", "MatchNumber", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "LLVm", "Defense", "Notes"})
+	for k, v := range data {
+		tcpjwt := []string{}
+		for i, _ := range v {
+			if i >= 4 && i <= 18 {
+				v[i] /= totals[k]
+
+			}
+			tcpjwt = append(tcpjwt, fmt.Sprintf("%.2f", v[i]))
+
+		}
+		tcpjwt[2] = k
+		totalsa = append(totalsa, tcpjwt)
+	}
+	fmt.Println("--------------------------------------------------------------------")
+	fmt.Println(totals)
+	fmt.Println(fmt.Sprintf("%v", data["test"]))
+
+	return totalsa
+}
+
 func main() {
 	db, err := gorm.Open(sqlite.Open("data.db"), &gorm.Config{})
 	//parse sqldb
@@ -79,7 +133,7 @@ func main() {
 	}
 
 	allData := []data.Schema{}
-	tcp := [][]string{}
+	tcp := [][]string{} //cojtrolled erorr sin average
 
 	averageLabel := widget.NewLabel("Average: 0")
 	teamChoose := widget.NewEntry()
@@ -106,13 +160,27 @@ func main() {
 		averageLabel.SetText("Average: " + fmt.Sprintf("%v", total/amnt))
 	})
 	tcp, allData = populate(db, allData, tcp, []string{"ID", "TeamName", "TeamNumber", "MatchNumber", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "LLVm", "Defense", "Notes"})
-
+	x := generateAverages(tcp)
 	fmt.Println("llvm", tcp)
 	app := app.New()
 	current := app.NewWindow("TKO Crescendo Tracker (patented)")
-	settings := app.NewWindow("Settings")
-	settings.Resize(fyne.NewSize(600, 600))
+	settings := app.NewWindow("Averages")
+	settings.Resize(fyne.NewSize(1200, 600))
 	settings.SetFixedSize(true)
+
+	averageTable := widget.NewTable(
+		func() (int, int) {
+			return len(x), len(x[0])
+		},
+		func() fyne.CanvasObject {
+			return widget.NewLabel("placeholder")
+
+		},
+		func(i widget.TableCellID, o fyne.CanvasObject) {
+			o.(*widget.Label).SetText(x[i.Row][i.Col])
+		},
+	)
+
 	current.Resize(fyne.NewSize(1200, 700))
 	current.SetFixedSize(true)
 	settings.SetCloseIntercept(func() {
@@ -147,7 +215,8 @@ func main() {
 	cont := container.NewVSplit(llvm, container.NewHSplit(container.NewVBox(widget.NewButtonWithIcon("Refresh", theme.ViewRefreshIcon(), func() {
 		tcp, allData = populate(db, allData, tcp, []string{"ID", "TeamName", "TeamNumber", "MatchNumber", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "LLVm", "Defense", "Notes"})
 		llvm.Refresh()
-	}), widget.NewButtonWithIcon("Settings", theme.SettingsIcon(), func() {
+		x = generateAverages(tcp)
+	}), widget.NewButtonWithIcon("Display Averages", theme.GridIcon(), func() {
 		settings.Show()
 	}), widget.NewButtonWithIcon("Export", theme.FileImageIcon(), func() {
 		llvm := dialog.NewFileSave(func(reader fyne.URIWriteCloser, err error) {
@@ -170,6 +239,8 @@ func main() {
 	}), widget.NewButtonWithIcon("Import", theme.InfoIcon(), func() {})), container.NewVBox(widget.NewLabel("llvmref"), teamChoose, averageChoose, averageLabel)))
 	cont.SetOffset(1) //clamps
 	mainContainer := cont
+
+	settings.SetContent(averageTable)
 
 	//migrate data and term[late
 	_ = db.AutoMigrate(&data.Schema{})
