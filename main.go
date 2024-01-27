@@ -113,7 +113,7 @@ func main() {
 	settings := app.NewWindow("Settings")
 	settings.Resize(fyne.NewSize(600, 600))
 	settings.SetFixedSize(true)
-	current.Resize(fyne.NewSize(1200, 600))
+	current.Resize(fyne.NewSize(1200, 700))
 	current.SetFixedSize(true)
 	settings.SetCloseIntercept(func() {
 		settings.Hide()
