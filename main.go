@@ -16,16 +16,11 @@ import (
 	"strings"
 )
 
-func main() {
-	db, err := gorm.Open(sqlite.Open("data.db"), &gorm.Config{})
-	//parse sqldb
-	if err != nil {
-		panic("Could not connect to DB")
-	}
-
-	allData := []data.Schema{}
-	tcp := [][]string{}
-	tcp = append(tcp, []string{"TeamName", "TeamNumber", "MatchNumber", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "LLVm", "Defense", "Notes"}) //hardcoded since migrated
+func populate(db *gorm.DB, allData []data.Schema, tcp [][]string, fields []string) ([][]string, []data.Schema) {
+	//reflection no tneeded
+	//by reference?
+	tcp = [][]string{}
+	tcp = append(tcp, fields) //hardcoded since migrated
 	db.Select("*").Find(&allData)
 	for _, val := range allData {
 		v := reflect.ValueOf(val)
@@ -38,6 +33,7 @@ func main() {
 		//opengl reference
 		//mmap syscall
 		vala := []string{}
+		//supposde to be emtpy fields to be filled populated
 		for _, tcppacket := range fields {
 
 			if reflect.TypeOf(tcppacket) == reflect.TypeOf(gorm.Model{}) {
@@ -50,6 +46,20 @@ func main() {
 		tcp = append(tcp, vala)
 
 	}
+	return tcp, allData
+
+}
+
+func main() {
+	db, err := gorm.Open(sqlite.Open("data.db"), &gorm.Config{})
+	//parse sqldb
+	if err != nil {
+		panic("Could not connect to DB")
+	}
+
+	allData := []data.Schema{}
+	tcp := [][]string{}
+	tcp, allData = populate(db, allData, tcp, []string{"ID", "TeamName", "TeamNumber", "MatchNumber", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "LLVm", "Defense", "Notes"})
 
 	fmt.Println("llvm", tcp)
 	app := app.New()
@@ -70,7 +80,9 @@ func main() {
 		func() (int, int) {
 
 			//assuming exsits and not acesing memaddr with nothing allloca egfault
-
+			if len(tcp) == 0 {
+				return 0, 0
+			}
 			return len(tcp), len(tcp[0])
 		},
 		func() fyne.CanvasObject {
@@ -86,7 +98,12 @@ func main() {
 		llvm.SetColumnWidth(i, 100)
 	}
 	// ast exp := widget.New
-	cont := container.NewVSplit(llvm, container.NewVBox(widget.NewButtonWithIcon("Settings", theme.SettingsIcon(), func() { settings.Show() }), widget.NewButtonWithIcon("Export", theme.FileImageIcon(), func() {
+	cont := container.NewVSplit(llvm, container.NewVBox(widget.NewButtonWithIcon("Refresh", theme.ViewRefreshIcon(), func() {
+		tcp, allData = populate(db, allData, tcp, []string{"ID", "TeamName", "TeamNumber", "MatchNumber", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "LLVm", "Defense", "Notes"})
+		llvm.Refresh()
+	}), widget.NewButtonWithIcon("Settings", theme.SettingsIcon(), func() {
+		settings.Show()
+	}), widget.NewButtonWithIcon("Export", theme.FileImageIcon(), func() {
 		llvm := dialog.NewFileSave(func(reader fyne.URIWriteCloser, err error) {
 			fmt.Println(err)
 			if err == nil && reader != nil {
