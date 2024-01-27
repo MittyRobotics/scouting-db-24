@@ -16,6 +16,27 @@ import (
 	"strings"
 )
 
+var headers map[string]int = map[string]int{
+	"TeamName":      1,
+	"TeamNumber":    2,
+	"MatchNumber":   3,
+	"AutoAmps":      4,
+	"AutoSpeaker":   5,
+	"AutoLeave":     6,
+	"AutoMiddle":    7,
+	"TeleopAmps":    8,
+	"TeleopSpeaker": 9,
+	"Chain":         10,
+	"Harmony":       11,
+	"Trap":          12,
+	"Park":          13,
+	"Ground":        14,
+	"Feeder":        15,
+	"LLVm":          16,
+	"Defense":       18,
+	"Notes":         19,
+}
+
 func populate(db *gorm.DB, allData []data.Schema, tcp [][]string, fields []string) ([][]string, []data.Schema) {
 	//reflection no tneeded
 	//by reference?
@@ -59,6 +80,31 @@ func main() {
 
 	allData := []data.Schema{}
 	tcp := [][]string{}
+
+	averageLabel := widget.NewLabel("Average: 0")
+	teamChoose := widget.NewEntry()
+	averageChoose := widget.NewSelect([]string{"AutoAmps", "AutoSpeaker", "TeleopAmps", "TeleopSpeaker"}, func(s string) {
+		total := 0
+		amnt := 0
+		for _, val := range tcp {
+			fmt.Println(val[1] == teamChoose.Text)
+			if val[1] == teamChoose.Text {
+				amnt++
+				fmt.Println("val", val[headers[s]])
+				vala, err := strconv.Atoi(val[headers[s]])
+				fmt.Println(err)
+				if err == nil {
+					total += vala
+				}
+			}
+
+		}
+		if amnt == 0 {
+			amnt = 1
+		}
+
+		averageLabel.SetText("Average: " + fmt.Sprintf("%v", total/amnt))
+	})
 	tcp, allData = populate(db, allData, tcp, []string{"ID", "TeamName", "TeamNumber", "MatchNumber", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "LLVm", "Defense", "Notes"})
 
 	fmt.Println("llvm", tcp)
@@ -98,7 +144,7 @@ func main() {
 		llvm.SetColumnWidth(i, 100)
 	}
 	// ast exp := widget.New
-	cont := container.NewVSplit(llvm, container.NewVBox(widget.NewButtonWithIcon("Refresh", theme.ViewRefreshIcon(), func() {
+	cont := container.NewVSplit(llvm, container.NewHSplit(container.NewVBox(widget.NewButtonWithIcon("Refresh", theme.ViewRefreshIcon(), func() {
 		tcp, allData = populate(db, allData, tcp, []string{"ID", "TeamName", "TeamNumber", "MatchNumber", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "LLVm", "Defense", "Notes"})
 		llvm.Refresh()
 	}), widget.NewButtonWithIcon("Settings", theme.SettingsIcon(), func() {
@@ -121,7 +167,7 @@ func main() {
 			}
 		}, current)
 		llvm.Show()
-	}), widget.NewButtonWithIcon("Import", theme.InfoIcon(), func() {})))
+	}), widget.NewButtonWithIcon("Import", theme.InfoIcon(), func() {})), container.NewVBox(widget.NewLabel("llvmref"), teamChoose, averageChoose, averageLabel)))
 	cont.SetOffset(1) //clamps
 	mainContainer := cont
 
