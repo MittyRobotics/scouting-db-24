@@ -39,6 +39,7 @@ var headers map[string]int = map[string]int{
 }
 
 var matchNumbers = map[string][]string{}
+var matchNumbersR = map[string]string{} //llvm reference comment node
 
 func populate(db *gorm.DB, allData []data.Schema, tcp [][]string, fields []string) ([][]string, []data.Schema) {
 	//reflection no tneeded
@@ -55,6 +56,7 @@ func populate(db *gorm.DB, allData []data.Schema, tcp [][]string, fields []strin
 			fields[j] = v.Field(j).Interface() //reflection my belobed
 		}
 		//opengl reference
+		// llvm golang sdk reference sinc ei compile to ir
 		//mmap syscall
 		vala := []string{}
 		//supposde to be emtpy fields to be filled populated
@@ -301,6 +303,10 @@ func main() {
 	teamLookup.Resize(fyne.NewSize(1200, 600))
 	teamLookup.SetFixedSize(true)
 
+	matchLookup := apptcpjwt.NewWindow("Match Lookup")
+	matchLookup.Resize(fyne.NewSize(1200, 600))
+	matchLookup.SetFixedSize(true)
+
 	averageTable := widget.NewTable(
 		func() (int, int) {
 			return len(x), len(x[0])
@@ -335,7 +341,9 @@ func main() {
 		teamLookup.Hide()
 	})
 	inputTeam := widget.NewEntry()
+	inputMatch := widget.NewEntry()
 	inputTeam.SetPlaceHolder("Team Number")
+	inputMatch.SetPlaceHolder("Match Number")
 	matches := widget.NewLabel("")
 	//teamData := widget.NewTextGridFromString("LLVM REFERENCE\nJWTAUTH")
 	//teamDataMedians := widget.NewTextGridFromString("LLVM REFERENCE\nJWTAUTH")
@@ -355,6 +363,9 @@ func main() {
 			o.(*widget.Label).SetText(currentAverages[i.Row][i.Col])
 		})
 	teamButton := widget.NewButton("LOOKUP", func() {
+		if inputTeam.Text == "" {
+			return
+		}
 		avg := []string{"Averages: "}
 		for _, v := range x {
 			if v[1] == inputTeam.Text {
@@ -374,6 +385,9 @@ func main() {
 		matches.SetText("Matches: " + strings.Join(matchNumbers[inputTeam.Text], ",") + " (" + fmt.Sprintf("%v", len(matchNumbers[inputTeam.Text])) + ")")
 		importantGeneralData.Refresh()
 	})
+	matchButton := widget.NewButton("LOOKUP", func() {
+
+	})
 	vsplit := container.NewVSplit(container.NewVBox(inputTeam, teamButton, matches), importantGeneralData)
 	vsplit.SetOffset(0)
 	teamLookup.SetContent(vsplit)
@@ -388,7 +402,7 @@ func main() {
 			if len(tcp) == 0 {
 				return 0, 0
 			}
-			return len(tcp), len(tcp[0])
+			return len(tcp), len(tcp[0]) //llvm
 		},
 		func() fyne.CanvasObject {
 			return widget.NewLabel("placeholder")
