@@ -34,9 +34,14 @@ var headers map[string]int = map[string]int{
 	"Park":          13,
 	"Ground":        14,
 	"Feeder":        15,
-	"LLVm":          16,
-	"Defense":       18,
-	"Notes":         19,
+	"Mobility":      16,
+	"Penalties":     17,
+	"TechPenalties": 18,
+	"GroundPickup":  19,
+	"StartingPos":   20,
+	"Defense":       21,
+	"CenterRing":    22,
+	"Notes":         23,
 }
 
 var matchNumbers = map[string][]string{}
@@ -101,7 +106,7 @@ func populate(db *gorm.DB, allData []data.Schema, tcp [][]string, fields []strin
 }
 
 func generateAverages(tcp [][]string) [][]string {
-	data := map[string]*[20]float64{}
+	data := map[string]*[24]float64{}
 	//kv of teamnmae; data
 	totals := map[string]float64{}
 	//kv of teanmae: total values
@@ -109,7 +114,7 @@ func generateAverages(tcp [][]string) [][]string {
 		if val[1] != "TeamName" {
 
 			if _, ok := data[val[1]]; !ok {
-				data[val[1]] = &[20]float64{}
+				data[val[1]] = &[24]float64{}
 				totals[val[1]] = 0
 			}
 			totals[val[1]]++
@@ -134,14 +139,11 @@ func generateAverages(tcp [][]string) [][]string {
 
 	}
 	totalsa := [][]string{}
-	totalsa = append(totalsa, []string{"ID", "TeamName", "TeamNumber", "MatchesPlayed", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "LLVm", "Defense", "Notes"})
+	totalsa = append(totalsa, []string{"ID", "TeamName", "TeamNumber", "MatchesPlayed", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"})
 	for k, v := range data {
 		tcpjwt := []string{}
 		for i, _ := range v {
-			if i >= 4 && i <= 18 {
-				v[i] /= totals[k]
-
-			}
+			v[i] /= totals[k]
 			tcpjwt = append(tcpjwt, fmt.Sprintf("%.2f", v[i]))
 
 		}
@@ -154,7 +156,7 @@ func generateAverages(tcp [][]string) [][]string {
 		if k == 0 {
 			continue
 		}
-		for _, val := range []int{14, 15, 17} {
+		for _, val := range []int{14, 15, 21, 16, 19, 22} {
 			vale, err := strconv.ParseFloat(v[val], 64) //64 bits., or could use reflection val.interface(val).type() == "float" i gess
 			if err == nil {
 				if vale > 0.2 {
@@ -193,18 +195,18 @@ func generateAverages(tcp [][]string) [][]string {
 //
 //		}
 //	}
-func generateMedians(tcp [][]string) [][19]string {
-	teamdata := map[string]*[19][]float64{} //i love expression sin the ast
-	teammedians := map[string]*[19]float64{}
-	header := [19]string{"ID", "TeamName", "TeamNumber", "MatchesPlayed", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "LLVm", "Defense", "Notes"}
+func generateMedians(tcp [][]string) [][24]string {
+	teamdata := map[string]*[24][]float64{} //i love expression sin the ast
+	teammedians := map[string]*[24]float64{}
+	header := [24]string{"ID", "TeamName", "TeamNumber", "MatchesPlayed", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"}
 	for _, y := range tcp[1:] {
 		for i, val := range y {
 			if _, ok := teamdata[y[1]]; !ok {
-				teamdata[y[1]] = &[19][]float64{}
+				teamdata[y[1]] = &[24][]float64{}
 				fmt.Println("notokay")
 			}
 			if _, ok := teammedians[y[1]]; !ok {
-				teammedians[y[1]] = &[19]float64{}
+				teammedians[y[1]] = &[24]float64{}
 			}
 			valejwt, err := strconv.Atoi(val)
 			if err != nil {
@@ -230,10 +232,10 @@ func generateMedians(tcp [][]string) [][19]string {
 			teammedians[key][i] = median
 		}
 	}
-	values := [][19]string{}
+	values := [][24]string{}
 	values = append(values, header)
 	for k, v := range teammedians {
-		tcpa := [19]string{}
+		tcpa := [24]string{}
 		for i, val := range v {
 			tcpa[i] = fmt.Sprintf("%.2f", val)
 		}
@@ -273,6 +275,7 @@ func generateMedians(tcp [][]string) [][19]string {
 
 func main() {
 	db, err := gorm.Open(sqlite.Open("data.db"), &gorm.Config{})
+	err = db.AutoMigrate(&data.Schema{})
 	//parse sqldb
 	if err != nil {
 		panic("Could not connect to DB")
@@ -304,7 +307,7 @@ func main() {
 	//	}
 	//	averageLabel.SetText("Average: " + fmt.Sprintf("%v", total/amnt))
 	//})
-	tcp, allData = populate(db, allData, tcp, []string{"ID", "TeamName", "TeamNumber", "MatchNumber", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "LLVm", "Defense", "Notes"})
+	tcp, allData = populate(db, allData, tcp, []string{"ID", "TeamName", "TeamNumber", "MatchesPlayed", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"})
 	x := generateAverages(tcp)
 	medians := generateMedians(tcp)
 	fmt.Println("llvm", tcp)
@@ -414,8 +417,8 @@ func main() {
 			}
 		}
 
-		currentAverages = [3][]string{{" ", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "LLVm", "Defense", "Notes"}, avg, media}
-		matchDatas[0] = []string{"ID", "TeamName", "TeamNumber", "MatchNumber", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "LLVm", "Defense", "Notes"}
+		currentAverages = [3][]string{{"ID", "TeamName", "TeamNumber", "MatchesPlayed", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"}, avg, media}
+		matchDatas[0] = []string{"ID", "TeamName", "TeamNumber", "MatchesPlayed", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"}
 		for k, v := range currentAverages {
 			fmt.Println(k, v)
 		}
@@ -456,7 +459,7 @@ func main() {
 
 			matchDatas[(ind*3)+1] = avg
 			matchDatas[ind*3+2] = media
-			matchDatas[0] = []string{" ", "ID", "TeamName", "TeamNumber", "MatchNumber", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "LLVm", "Defense", "Notes"}
+			matchDatas[0] = []string{"ID", "TeamName", "TeamNumber", "MatchesPlayed", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"}
 			for k, v := range matchDatas {
 				fmt.Println(k, v)
 			}
@@ -506,7 +509,7 @@ func main() {
 	}
 	// ast exp := widget.New
 	cont := container.NewVSplit(container.NewHSplit(averageTable, medianTable), container.NewVBox(widget.NewButtonWithIcon("Refresh", theme.ViewRefreshIcon(), func() {
-		tcp, allData = populate(db, allData, tcp, []string{"ID", "TeamName", "TeamNumber", "MatchNumber", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "LLVm", "Defense", "Notes"})
+		tcp, allData = populate(db, allData, tcp, []string{"ID", "TeamName", "TeamNumber", "MatchesPlayed", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"})
 		llvm.Refresh()
 		x = generateAverages(tcp)
 		medians = generateMedians(tcp)
@@ -546,6 +549,7 @@ func main() {
 				fmt.Println(reader.Path())
 				//aloloc to memory address
 				alert := dialog.NewConfirm("Import?", fmt.Sprintf("Are you sure you want to import from directory '%v'?", reader.Name()), func(yes bool) {
+					//lld
 					if yes {
 						dir, _ := os.Open(reader.Path())
 						filevec, err := dir.Readdir(0)
@@ -561,6 +565,8 @@ func main() {
 							_, _ = file.Read(buffer)
 							fmt.Println(string(buffer))
 						}
+
+						//a random valid that actually exsists google oauth key scraped from the internet is:  "client_id": "32555940559.apps.googleusercontent.com",
 					}
 				}, current)
 				alert.Show()
@@ -576,11 +582,59 @@ func main() {
 	settings.SetContent(llvm)
 
 	//migrate data and t	erm[late
-	_ = db.AutoMigrate(&data.Schema{})
 	//expressions ast
 	//db.Raw("GET WHERE name = 1")
 	//invoke com[
-	db.Create(&data.Schema{TeamName: "test", TeamNumber: 1, MatchNumber: 1, AutoAmps: 1, AutoSpeaker: 1, AutoLeave: true, AutoMiddle: true, TeleopAmps: 1, TeleopSpeaker: 1, Chain: true, Harmony: true, Trap: true, Park: true, Ground: true, Feeder: true, LLVm: "test", Defense: true, Notes: "test"})
+	//db.Create(&data.Schema{
+	//	TeamName:      "llvm",
+	//	TeamNumber:    0,
+	//	MatchNumber:   0,
+	//	AutoAmps:      2,
+	//	AutoSpeaker:   2,
+	//	AutoLeave:     false,
+	//	AutoMiddle:    false,
+	//	TeleopAmps:    2,
+	//	TeleopSpeaker: 2,
+	//	Chain:         false,
+	//	Harmony:       false,
+	//	Trap:          false,
+	//	Park:          false,
+	//	Ground:        false,
+	//	Feeder:        false,
+	//	Mobility:      false,
+	//	Penalties:     2,
+	//	TechPenalties: 2,
+	//	GroundPickup:  false,
+	//	StartingPos:   2,
+	//	Defense:       false,
+	//	CenterRing:    false,
+	//	Notes:         "",
+	//})
+	//db.Create(&data.Schema{
+	//	TeamName:      "llvm",
+	//	TeamNumber:    0,
+	//	MatchNumber:   0,
+	//	AutoAmps:      4,
+	//	AutoSpeaker:   4,
+	//	AutoLeave:     false,
+	//	AutoMiddle:    false,
+	//	TeleopAmps:    4,
+	//	TeleopSpeaker: 4,
+	//	Chain:         false,
+	//	Harmony:       false,
+	//	Trap:          false,
+	//	Park:          false,
+	//	Ground:        false,
+	//	Feeder:        false,
+	//	Mobility:      false,
+	//	Penalties:     4,
+	//	TechPenalties: 4,
+	//	GroundPickup:  false,
+	//	StartingPos:   4,
+	//	Defense:       false,
+	//	CenterRing:    false,
+	//	Notes:         "",
+	//})
 	current.SetContent(mainContainer)
 	current.ShowAndRun() //defer?
 	//llvm go sadck jwt auth
