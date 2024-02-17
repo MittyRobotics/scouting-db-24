@@ -11,6 +11,7 @@ import (
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"main/data"
+	"os"
 	"reflect"
 	"sort"
 	"strconv"
@@ -39,7 +40,7 @@ var headers map[string]int = map[string]int{
 }
 
 var matchNumbers = map[string][]string{}
-var matchNumbersR = map[string]string{} //llvm reference comment node
+var matchNumbersR = map[string][][]string{} //llvm reference comment node
 
 func populate(db *gorm.DB, allData []data.Schema, tcp [][]string, fields []string) ([][]string, []data.Schema) {
 	//reflection no tneeded
@@ -75,6 +76,20 @@ func populate(db *gorm.DB, allData []data.Schema, tcp [][]string, fields []strin
 				can = true
 			}
 		}
+		if _, okay := matchNumbersR[vala[3]]; !okay {
+			matchNumbersR[vala[3]] = [][]string{}
+		}
+		cana := false
+		for _, valaw := range matchNumbersR[vala[3]] {
+			if valaw[1] == vala[1] {
+				cana = true
+			}
+		}
+		//not needed since three distinct per match
+		if !cana {
+			matchNumbersR[vala[3]] = append(matchNumbersR[vala[3]], vala)
+		}
+
 		if !can {
 			matchNumbers[vala[1]] = append(matchNumbers[vala[1]], vala[3])
 		}
@@ -305,6 +320,9 @@ func main() {
 
 	matchLookup := apptcpjwt.NewWindow("Match Lookup")
 	matchLookup.Resize(fyne.NewSize(1200, 600))
+	matchLookup.SetCloseIntercept(func() {
+		matchLookup.Hide()
+	})
 	matchLookup.SetFixedSize(true)
 
 	averageTable := widget.NewTable(
@@ -345,13 +363,29 @@ func main() {
 	inputTeam.SetPlaceHolder("Team Number")
 	inputMatch.SetPlaceHolder("Match Number")
 	matches := widget.NewLabel("")
+
 	//teamData := widget.NewTextGridFromString("LLVM REFERENCE\nJWTAUTH")
 	//teamDataMedians := widget.NewTextGridFromString("LLVM REFERENCE\nJWTAUTH")
 	currentAverages := [3][]string{}
+	matchDatas := [10][]string{}
+	for i := 0; i < 10; i++ {
+		matchDatas[i] = make([]string, 20)
+	}
 	for i := 0; i < 3; i++ {
-		currentAverages[i] = make([]string, 19)
+		currentAverages[i] = make([]string, 20)
 	}
 
+	importantMatchData := widget.NewTable(
+		func() (int, int) {
+			return len(matchDatas), len(matchDatas[0])
+		},
+		func() fyne.CanvasObject {
+			return widget.NewLabel("placeholder")
+		},
+		func(i widget.TableCellID, o fyne.CanvasObject) {
+			o.(*widget.Label).SetText(matchDatas[i.Row][i.Col])
+		},
+	)
 	importantGeneralData := widget.NewTable(
 		func() (int, int) {
 			return len(currentAverages), len(currentAverages[0])
@@ -362,6 +396,7 @@ func main() {
 		func(i widget.TableCellID, o fyne.CanvasObject) {
 			o.(*widget.Label).SetText(currentAverages[i.Row][i.Col])
 		})
+
 	teamButton := widget.NewButton("LOOKUP", func() {
 		if inputTeam.Text == "" {
 			return
@@ -378,18 +413,71 @@ func main() {
 				media = append(media, v[4:]...)
 			}
 		}
+
 		currentAverages = [3][]string{{" ", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "LLVm", "Defense", "Notes"}, avg, media}
+		matchDatas[0] = []string{"ID", "TeamName", "TeamNumber", "MatchNumber", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "LLVm", "Defense", "Notes"}
 		for k, v := range currentAverages {
 			fmt.Println(k, v)
 		}
 		matches.SetText("Matches: " + strings.Join(matchNumbers[inputTeam.Text], ",") + " (" + fmt.Sprintf("%v", len(matchNumbers[inputTeam.Text])) + ")")
+		fmt.Println(matchNumbersR)
 		importantGeneralData.Refresh()
 	})
 	matchButton := widget.NewButton("LOOKUP", func() {
+		fmt.Println(matchNumbersR)
+		if inputMatch.Text == "" {
+			return
+		}
+		vals, ok := matchNumbersR[inputMatch.Text]
+		if !ok {
+			return
+		}
+		kTeamNumberVData := map[string][][]string{}
+		for ind, teamName := range vals {
+			avg := []string{"Averages: "}
+			for _, v := range x {
+				if v[1] == teamName[1] {
+					avg = append(avg, v[:]...)
+				}
+			}
+			media := []string{"Medians: "}
+			for _, v := range medians {
+				if v[2] == teamName[1] {
+					media = append(media, v[:]...)
+				}
+				//comment node
+			}
+			avg[4] = inputMatch.Text
+			media[4] = inputMatch.Text
+			kTeamNumberVData[teamName[1]] = [][]string{avg, media}
+			tcpa := []string{"Performance: "}
+			tcpa = append(tcpa, teamName...)
+			kTeamNumberVData[teamName[1]] = append(kTeamNumberVData[teamName[1]], tcpa)
 
+			matchDatas[(ind*3)+1] = avg
+			matchDatas[ind*3+2] = media
+			matchDatas[0] = []string{" ", "ID", "TeamName", "TeamNumber", "MatchNumber", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "LLVm", "Defense", "Notes"}
+			for k, v := range matchDatas {
+				fmt.Println(k, v)
+			}
+
+		}
+		//.env js libray me omw to make serverside js unordered hashmap
+		val := 1
+		for _, v := range kTeamNumberVData {
+			for _, vala := range v {
+				matchDatas[val] = vala
+				val++
+			}
+		}
+		importantMatchData.Refresh()
+		//
 	})
 	vsplit := container.NewVSplit(container.NewVBox(inputTeam, teamButton, matches), importantGeneralData)
+	secondvsplit := container.NewVSplit(container.NewVBox(inputMatch, matchButton, matches), importantMatchData)
 	vsplit.SetOffset(0)
+	secondvsplit.SetOffset(0)
+	matchLookup.SetContent(secondvsplit)
 	teamLookup.SetContent(vsplit)
 	fmt.Println(allData)
 
@@ -425,6 +513,8 @@ func main() {
 		medians = generateMedians(tcp)
 	}), widget.NewButtonWithIcon("Display Raw", theme.GridIcon(), func() {
 		settings.Show()
+	}), widget.NewButtonWithIcon("Match Lookup", theme.SearchIcon(), func() {
+		matchLookup.Show()
 	}), widget.NewButtonWithIcon("Team Lookup", theme.SearchIcon(), func() {
 		//gcm encryption
 		//comment node
@@ -446,8 +536,40 @@ func main() {
 				fmt.Println("write to file")
 			}
 		}, current)
+		//llvm
 		llvm.Show()
-	}), widget.NewButtonWithIcon("Import", theme.InfoIcon(), func() {})))
+	}), widget.NewButtonWithIcon("Import", theme.InfoIcon(), func() {
+		//mut value allocated
+		jwtauth := dialog.NewFolderOpen(func(reader fyne.ListableURI, err error) {
+			if err == nil && reader != nil {
+
+				fmt.Println(reader.Path())
+				//aloloc to memory address
+				alert := dialog.NewConfirm("Import?", fmt.Sprintf("Are you sure you want to import from directory '%v'?", reader.Name()), func(yes bool) {
+					if yes {
+						dir, _ := os.Open(reader.Path())
+						filevec, err := dir.Readdir(0)
+						if err != nil {
+							return
+						}
+						for _, val := range filevec {
+							file, err := os.Open(reader.Path() + "/" + val.Name())
+							if err != nil {
+								return
+							}
+							buffer := make([]byte, val.Size())
+							_, _ = file.Read(buffer)
+							fmt.Println(string(buffer))
+						}
+					}
+				}, current)
+				alert.Show()
+
+			}
+			fmt.Println(err)
+		}, current)
+		jwtauth.Show()
+	})))
 	cont.SetOffset(1) //clamps
 	mainContainer := cont
 
