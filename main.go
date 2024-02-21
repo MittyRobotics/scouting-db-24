@@ -307,11 +307,14 @@ func main() {
 	//	}
 	//	averageLabel.SetText("Average: " + fmt.Sprintf("%v", total/amnt))
 	//})
+	os.Setenv("FYNE_THEME", "light")
+	os.Setenv("FYNE_FONT", "Ubuntu")
 	tcp, allData = populate(db, allData, tcp, []string{"ID", "TeamName", "TeamNumber", "MatchesPlayed", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"})
 	x := generateAverages(tcp)
 	medians := generateMedians(tcp)
 	fmt.Println("llvm", tcp)
 	apptcpjwt := app.New()
+
 	current := apptcpjwt.NewWindow("TKO Crescendo Tracker (patented)")
 	settings := apptcpjwt.NewWindow("Data")
 	settings.Resize(fyne.NewSize(1200, 600))
@@ -370,9 +373,9 @@ func main() {
 	//teamData := widget.NewTextGridFromString("LLVM REFERENCE\nJWTAUTH")
 	//teamDataMedians := widget.NewTextGridFromString("LLVM REFERENCE\nJWTAUTH")
 	currentAverages := [3][]string{}
-	matchDatas := [10][]string{}
-	for i := 0; i < 10; i++ {
-		matchDatas[i] = make([]string, 20)
+	matchDatas := [19][]string{}
+	for i := 0; i < 19; i++ {
+		matchDatas[i] = make([]string, 24)
 	}
 	for i := 0; i < 3; i++ {
 		currentAverages[i] = make([]string, 20)
@@ -561,6 +564,27 @@ func main() {
 							if err != nil {
 								return
 							}
+							//toAdd := data.Schema{}
+							//value := reflect.ValueOf(&toAdd).Elem()
+							//vals := map[string][]int{ //ENDGAME SPECIAL CASE
+							//	"TEAMNUM":       {1, 2},
+							//	"MATCHNUM":      {3},
+							//	"MOBILITY":      {16},
+							//	"DEFENDING":     {21},
+							//	"STARTINGPOS":   {20},
+							//	"AUTONSPEAKER":  {5},
+							//	"AUTONAMP":      {4},
+							//	"CENTERRING":    {22},
+							//	"TELEOPSPEAKER": {9},
+							//	"TELEOPAMP":     {8},
+							//	"TRAP":          {12},
+							//	"HARMONY":       {11},
+							//	"GROUND":        {14},
+							//	"FEEDER":        {15},
+							//	"PENALTIES":     {17},
+							//	"TECHPENALTIES": {18},
+							//	"NOTES":         {23},
+							//}
 							buffer := make([]byte, val.Size())
 							_, _ = file.Read(buffer)
 							fmt.Println(string(buffer))
