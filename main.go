@@ -378,7 +378,7 @@ func main() {
 		matchDatas[i] = make([]string, 24)
 	}
 	for i := 0; i < 3; i++ {
-		currentAverages[i] = make([]string, 20)
+		currentAverages[i] = make([]string, 24)
 	}
 
 	importantMatchData := widget.NewTable(
