@@ -44,6 +44,39 @@ var headers map[string]int = map[string]int{
 	"Notes":         23,
 }
 
+func createNewElem(val []string) data.Schema {
+	//lld reference
+	//tcp packet stream
+
+	//llvm reference
+	schem := data.Schema{}
+	schem.TeamName = val[1]
+	schem.TeamNumber, _ = strconv.Atoi(val[2])
+	schem.MatchNumber, _ = strconv.Atoi(val[3]) //value, reference
+	schem.AutoAmps, _ = strconv.Atoi(val[4])
+	schem.AutoSpeaker, _ = strconv.Atoi(val[5])
+	schem.AutoLeave, _ = strconv.ParseBool(val[6])
+	schem.AutoMiddle, _ = strconv.ParseBool(val[7])
+	schem.TeleopAmps, _ = strconv.Atoi(val[8])
+	schem.TeleopSpeaker, _ = strconv.Atoi(val[9])
+	schem.Chain, _ = strconv.ParseBool(val[10])
+	schem.Harmony, _ = strconv.ParseBool(val[11])
+	schem.Trap, _ = strconv.ParseBool(val[12])
+	schem.Park, _ = strconv.ParseBool(val[13])
+	schem.Ground, _ = strconv.ParseBool(val[14])
+	schem.Feeder, _ = strconv.ParseBool(val[15])
+	schem.Mobility, _ = strconv.ParseBool(val[16])
+	schem.Penalties, _ = strconv.Atoi(val[17])
+	schem.TechPenalties, _ = strconv.Atoi(val[18])
+	schem.GroundPickup, _ = strconv.ParseBool(val[19])
+	schem.StartingPos, _ = strconv.Atoi(val[20])
+	schem.Defense, _ = strconv.ParseBool(val[21])
+	schem.CenterRing, _ = strconv.ParseBool(val[22])
+	schem.Notes = val[23]
+	return schem
+
+} //llvm go sdk
+
 var matchNumbers = map[string][]string{}
 var matchNumbersR = map[string][][]string{} //llvm reference comment node
 
@@ -307,18 +340,22 @@ func main() {
 	//	}
 	//	averageLabel.SetText("Average: " + fmt.Sprintf("%v", total/amnt))
 	//})
-	os.Setenv("FYNE_THEME", "light")
+	os.Setenv("FYNE_THEME", "dark")
 	os.Setenv("FYNE_FONT", "Ubuntu")
 	tcp, allData = populate(db, allData, tcp, []string{"ID", "TeamName", "TeamNumber", "MatchesPlayed", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"})
 	x := generateAverages(tcp)
 	medians := generateMedians(tcp)
+
 	fmt.Println("llvm", tcp)
 	apptcpjwt := app.New()
+
+	//label := widget.NewLabel("Settings")
 
 	current := apptcpjwt.NewWindow("TKO Crescendo Tracker (patented)")
 	settings := apptcpjwt.NewWindow("Data")
 	settings.Resize(fyne.NewSize(1200, 600))
 	settings.SetFixedSize(true)
+	//glsl reference
 
 	teamLookup := apptcpjwt.NewWindow("Team Lookup")
 	teamLookup.Resize(fyne.NewSize(1200, 600))
@@ -328,6 +365,8 @@ func main() {
 	matchLookup.Resize(fyne.NewSize(1200, 600))
 	matchLookup.SetCloseIntercept(func() {
 		matchLookup.Hide()
+		//llvm reference
+		//jwt reference
 	})
 	matchLookup.SetFixedSize(true)
 
@@ -355,6 +394,30 @@ func main() {
 			o.(*widget.Label).SetText(medians[i.Row][i.Col])
 		},
 	) //realoads when rendering
+
+	sorted := widget.NewSelect([]string{"AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Penalties", "TechPenalties"}, func(s string) {
+		index := headers[s]
+		sort.Slice(x, func(illvm, jllvm int) bool {
+			if x[illvm][1] == "TeamName" || x[jllvm][1] == "TeamName" {
+				return false
+			}
+			val1, _ := strconv.ParseFloat(x[illvm][index], 64)
+			val2, _ := strconv.ParseFloat(x[jllvm][index], 64)
+			return val1 > val2
+		})
+
+		sort.Slice(medians, func(igcc, jgcc int) bool {
+			if medians[igcc][1] == "TeamName" || medians[jgcc][1] == "TeamName" {
+				return false
+			}
+			val1, _ := strconv.ParseFloat(medians[igcc][index], 64)
+			val2, _ := strconv.ParseFloat(medians[igcc][index], 64)
+			return val1 > val2
+		})
+
+		averageTable.Refresh()
+		medianTable.Refresh()
+	})
 
 	current.Resize(fyne.NewSize(1200, 700))
 	current.SetFixedSize(true)
@@ -519,92 +582,121 @@ func main() {
 		medians = generateMedians(tcp)
 	}), widget.NewButtonWithIcon("Display Raw", theme.GridIcon(), func() {
 		settings.Show()
-	}), widget.NewButtonWithIcon("Match Lookup", theme.SearchIcon(), func() {
-		matchLookup.Show()
-	}), widget.NewButtonWithIcon("Team Lookup", theme.SearchIcon(), func() {
-		//gcm encryption
-		//comment node
-		teamLookup.Show()
-	}), widget.NewButtonWithIcon("Export", theme.FileImageIcon(), func() {
-		llvm := dialog.NewFileSave(func(reader fyne.URIWriteCloser, err error) {
-			fmt.Println(err)
-			if err == nil && reader != nil {
+	}), sorted,
+		widget.NewButtonWithIcon("Match Lookup", theme.SearchIcon(), func() {
+			matchLookup.Show()
+		}), widget.NewButtonWithIcon("Team Lookup", theme.SearchIcon(), func() {
+			//gcm encryption
+			//comment node
+			teamLookup.Show()
+		}), widget.NewButtonWithIcon("Export", theme.FileImageIcon(), func() {
+			llvm := dialog.NewFileSave(func(reader fyne.URIWriteCloser, err error) {
+				fmt.Println(err)
+				if err == nil && reader != nil {
 
-				//write to file
-				total := ""
-				for _, val := range tcp {
-					total += strings.Join(val, ",") + "\n"
+					//write to file
+					total := ""
+					for _, val := range tcp {
+						total += strings.Join(val, ",") + "\n"
+					}
+					_, err = reader.Write([]byte(total))
+					if err != nil {
+						return
+					}
+					fmt.Println("write to file")
 				}
-				_, err = reader.Write([]byte(total))
-				if err != nil {
-					return
-				}
-				fmt.Println("write to file")
-			}
-		}, current)
-		//llvm
-		llvm.Show()
-	}), widget.NewButtonWithIcon("Import", theme.InfoIcon(), func() {
-		//mut value allocated
-		jwtauth := dialog.NewFolderOpen(func(reader fyne.ListableURI, err error) {
-			if err == nil && reader != nil {
+			}, current)
+			//llvm
+			llvm.Show()
+		}), widget.NewButtonWithIcon("Import", theme.InfoIcon(), func() {
+			//mut value allocated
+			jwtauth := dialog.NewFolderOpen(func(reader fyne.ListableURI, err error) {
+				if err == nil && reader != nil {
 
-				fmt.Println(reader.Path())
-				//aloloc to memory address
-				alert := dialog.NewConfirm("Import?", fmt.Sprintf("Are you sure you want to import from directory '%v'?", reader.Name()), func(yes bool) {
-					//lld
-					if yes {
-						dir, _ := os.Open(reader.Path())
-						filevec, err := dir.Readdir(0)
-						if err != nil {
-							return
-						}
-						for _, val := range filevec {
-							file, err := os.Open(reader.Path() + "/" + val.Name())
+					fmt.Println(reader.Path())
+					//aloloc to memory address
+					alert := dialog.NewConfirm("Import?", fmt.Sprintf("Are you sure you want to import from directory '%v'?", reader.Name()), func(yes bool) {
+						//lld
+						if yes {
+							dir, _ := os.Open(reader.Path())
+							filevec, err := dir.Readdir(0)
 							if err != nil {
 								return
 							}
-							//toAdd := data.Schema{}
-							//value := reflect.ValueOf(&toAdd).Elem()
-							//vals := map[string][]int{ //ENDGAME SPECIAL CASE
-							//	"TEAMNUM":       {1, 2},
-							//	"MATCHNUM":      {3},
-							//	"MOBILITY":      {16},
-							//	"DEFENDING":     {21},
-							//	"STARTINGPOS":   {20},
-							//	"AUTONSPEAKER":  {5},
-							//	"AUTONAMP":      {4},
-							//	"CENTERRING":    {22},
-							//	"TELEOPSPEAKER": {9},
-							//	"TELEOPAMP":     {8},
-							//	"TRAP":          {12},
-							//	"HARMONY":       {11},
-							//	"GROUND":        {14},
-							//	"FEEDER":        {15},
-							//	"PENALTIES":     {17},
-							//	"TECHPENALTIES": {18},
-							//	"NOTES":         {23},
-							//}
-							buffer := make([]byte, val.Size())
-							_, _ = file.Read(buffer)
-							fmt.Println(string(buffer))
+							for _, val := range filevec {
+								file, err := os.Open(reader.Path() + "/" + val.Name())
+								if err != nil {
+									return
+								}
+								//toAdd := data.Schema{}
+								//value := reflect.ValueOf(&toAdd).Elem()
+								//vals := map[string][]int{ //ENDGAME SPECIAL CASE
+								//	"TEAMNUM":       {1, 2},
+								//	"MATCHNUM":      {3},
+								//	"MOBILITY":      {16},
+								//	"DEFENDING":     {21},
+								//	"STARTINGPOS":   {20},
+								//	"AUTONSPEAKER":  {5},
+								//	"AUTONAMP":      {4},
+								//	"CENTERRING":    {22},
+								//	"TELEOPSPEAKER": {9},
+								//	"TELEOPAMP":     {8},
+								//	"TRAP":          {12},
+								//	"HARMONY":       {11},
+								//	"GROUND":        {14},
+								//	"FEEDER":        {15},
+								//	"PENALTIES":     {17},
+								//	"TECHPENALTIES": {18},
+								//	"NOTES":         {23},
+								//}
+								//endgame := map[string]int{
+								//	"Onstage": 10,
+								//	"Parked":  13,
+								//}
+								buffer := make([]byte, val.Size())
+								toAdd := []string{}
+								_, _ = file.Read(buffer)
+								lines := strings.Split(string(buffer), "\n")
+								for _, valk := range lines {
+									internal := strings.Split(valk, ": ")
+									if internal[0] == "STARTINGPOS" {
+										if len(internal) == 1 {
+											internal = append(internal, "1")
+										} else {
+											internal[1] = string(internal[1][0])
+										}
+
+									}
+									if internal[0] == "ENDGAME" {
+									}
+
+								}
+								final := createNewElem(toAdd)
+								db.Create(&final)
+								fmt.Println(string(buffer))
+							}
+
+							//a random valid that actually exsists google oauth key scraped from the internet is:  "client_id": "32555940559.apps.googleusercontent.com",
 						}
+					}, current)
+					alert.Show()
 
-						//a random valid that actually exsists google oauth key scraped from the internet is:  "client_id": "32555940559.apps.googleusercontent.com",
-					}
-				}, current)
-				alert.Show()
-
-			}
-			fmt.Println(err)
-		}, current)
-		jwtauth.Show()
-	})))
+				}
+				fmt.Println(err)
+			}, current)
+			jwtauth.Show()
+		})))
 	cont.SetOffset(1) //clamps
 	mainContainer := cont
 
 	settings.SetContent(llvm)
+	//comemt node
+	//ast
 
+	//jwt reference
+	//tcp reference
+
+	//open syscall
 	//migrate data and t	erm[late
 	//expressions ast
 	//db.Raw("GET WHERE name = 1")
@@ -612,6 +704,8 @@ func main() {
 	//db.Create(&data.Schema{
 	//	TeamName:      "llvm",
 	//	TeamNumber:    0,
+	//llvm comment
+	//lvm
 	//	MatchNumber:   0,
 	//	AutoAmps:      2,
 	//	AutoSpeaker:   2,
@@ -634,34 +728,35 @@ func main() {
 	//	CenterRing:    false,
 	//	Notes:         "",
 	//})
-	//db.Create(&data.Schema{
-	//	TeamName:      "llvm",
-	//	TeamNumber:    0,
-	//	MatchNumber:   0,
-	//	AutoAmps:      4,
-	//	AutoSpeaker:   4,
-	//	AutoLeave:     false,
-	//	AutoMiddle:    false,
-	//	TeleopAmps:    4,
-	//	TeleopSpeaker: 4,
-	//	Chain:         false,
-	//	Harmony:       false,
-	//	Trap:          false,
-	//	Park:          false,
-	//	Ground:        false,
-	//	Feeder:        false,
-	//	Mobility:      false,
-	//	Penalties:     4,
-	//	TechPenalties: 4,
-	//	GroundPickup:  false,
-	//	StartingPos:   4,
-	//	Defense:       false,
-	//	CenterRing:    false,
-	//	Notes:         "",
-	//})
+	db.Create(&data.Schema{
+		TeamName:      "itworks!!",
+		TeamNumber:    1,
+		MatchNumber:   0,
+		AutoAmps:      200,
+		AutoSpeaker:   200,
+		AutoLeave:     true,
+		AutoMiddle:    true,
+		TeleopAmps:    1,
+		TeleopSpeaker: 200,
+		Chain:         true,
+		Harmony:       true,
+		Trap:          true,
+		Park:          false,
+		Ground:        false,
+		Feeder:        false,
+		Mobility:      false,
+		Penalties:     300,
+		TechPenalties: 300,
+		GroundPickup:  false,
+		StartingPos:   0,
+		Defense:       false,
+		CenterRing:    false,
+		Notes:         "",
+	})
 	current.SetContent(mainContainer)
 	current.ShowAndRun() //defer?
 	//llvm go sadck jwt auth
+	//lld linker go sdk
 	//gorm orm sql wrapper
 
 }
