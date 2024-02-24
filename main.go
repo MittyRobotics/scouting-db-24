@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"github.com/wcharczuk/go-chart/v2"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"main/data"
@@ -307,6 +309,74 @@ func generateMedians(tcp [][]string) [][24]string {
 }
 
 func main() {
+	//lld re
+	graph := chart.
+		BarChart{
+		Title: "Autonomous Amps",
+		Background: chart.Style{
+			Padding: chart.Box{
+				Top:    40,
+				Bottom: 40,
+			},
+		},
+		YAxis: chart.YAxis{
+			Name: "Amps Scored",
+		},
+		Height: 612,
+		Width:  2048,
+		Bars: []chart.Value{
+			{Value: 5.0, Label: "llvm compiler"},
+			{Value: 7.0, Label: "mmap llvm compiler"},
+			{Value: 8.0, Label: "jwtllvm compiler"},
+			{Value: 5.0, Label: "llvm compiler"},
+			{Value: 7.0, Label: "mmap llvm compiler"},
+			{Value: 8.0, Label: "jwtllvm compiler"},
+			{Value: 5.0, Label: "llvm compiler"},
+			{Value: 7.0, Label: "mmap llvm compiler"},
+			{Value: 8.0, Label: "jwtllvm compiler"},
+			{Value: 5.0, Label: "llvm compiler"},
+			{Value: 7.0, Label: "mmap llvm compiler"},
+			{Value: 8.0, Label: "jwtllvm compiler"},
+			{Value: 5.0, Label: "llvm compiler"},
+			{Value: 7.0, Label: "mmap llvm compiler"},
+			{Value: 8.0, Label: "jwtllvm compiler"},
+			{Value: 5.0, Label: "llvm compiler"},
+			{Value: 7.0, Label: "mmap llvm compiler"},
+			{Value: 8.0, Label: "jwtllvm compiler"},
+			{Value: 5.0, Label: "llvm compiler"},
+			{Value: 7.0, Label: "mmap llvm compiler"},
+			{Value: 8.0, Label: "jwtllvm compiler"},
+			{Value: 5.0, Label: "llvm compiler"},
+			{Value: 7.0, Label: "mmap llvm compiler"},
+			{Value: 8.0, Label: "jwtllvm compiler"},
+			{Value: 5.0, Label: "llvm compiler"},
+			{Value: 7.0, Label: "mmap llvm compiler"},
+			{Value: 8.0, Label: "jwtllvm compiler"},
+			{Value: 5.0, Label: "llvm compiler"},
+			{Value: 7.0, Label: "mmap llvm compiler"},
+			{Value: 8.0, Label: "jwtllvm compiler"},
+			{Value: 5.0, Label: "llvm compiler"},
+			{Value: 7.0, Label: "mmap llvm compiler"},
+			{Value: 8.0, Label: "jwtllvm compiler"},
+			{Value: 5.0, Label: "llvm compiler"},
+			{Value: 7.0, Label: "mmap llvm compiler"},
+			{Value: 8.0, Label: "jwtllvm compiler"},
+			{Value: 5.0, Label: "llvm compiler"},
+			{Value: 7.0, Label: "mmap llvm compiler"},
+			{Value: 8.0, Label: "jwtllvm compiler"},
+			{Value: 5.0, Label: "llvm compiler"},
+			{Value: 7.0, Label: "mmap llvm compiler"},
+			{Value: 8.0, Label: "jwtllvm compiler"},
+		},
+	}
+	bufToWrite, err := os.Create("graphs/graph.png")
+	if err != nil {
+		panic("Could not open file")
+	}
+	err = graph.Render(chart.PNG, bufToWrite)
+	if err != nil {
+		panic("could not render")
+	}
 	db, err := gorm.Open(sqlite.Open("data.db"), &gorm.Config{})
 	err = db.AutoMigrate(&data.Schema{})
 	//parse sqldb
@@ -361,7 +431,26 @@ func main() {
 	teamLookup.Resize(fyne.NewSize(1200, 600))
 	teamLookup.SetFixedSize(true)
 
+	teamCharts := apptcpjwt.NewWindow("Team Charts")
+	teamCharts.Resize(fyne.NewSize(1024, 1024))
+	teamCharts.SetCloseIntercept(func() {
+		teamCharts.Hide()
+	})
+
+	image := canvas.NewImageFromFile("graphs/graph.png")
+	image.SetMinSize(fyne.NewSize(1024, 612))
+	image.FillMode = canvas.ImageFillContain
+	image.Resize(fyne.NewSize(1024, 612))
+	imageSelect := widget.NewSelect([]string{"AutoAmps", "AutoSpeaker", "TeleopAmps", "TeleopSpeaker"}, func(s string) {
+		image.File = "graphs/" + s + ".png"
+		image.Refresh()
+	})
+	vspli := container.NewVSplit(imageSelect, image)
+	vspli.SetOffset(0)
+	teamCharts.SetContent(vspli)
+
 	matchLookup := apptcpjwt.NewWindow("Match Lookup")
+	//lld
 	matchLookup.Resize(fyne.NewSize(1200, 600))
 	matchLookup.SetCloseIntercept(func() {
 		matchLookup.Hide()
@@ -459,6 +548,7 @@ func main() {
 		func() (int, int) {
 			return len(currentAverages), len(currentAverages[0])
 		},
+		//lld reference
 		func() fyne.CanvasObject {
 			return widget.NewLabel("placeholder")
 		},
@@ -482,6 +572,45 @@ func main() {
 				media = append(media, v[4:]...)
 			}
 		}
+		datas := map[string][][]int{
+			"AutoAmps":      {},
+			"AutoSpeaker":   {},
+			"TeleopAmps":    {},
+			"TeleopSpeaker": {},
+		}
+		for _, v := range allData {
+			datas["AutoAmps"] = append(datas["AutoAmps"], []int{v.AutoAmps, v.MatchNumber})
+			datas["AutoSpeaker"] = append(datas["AutoSpeaker"], []int{v.AutoSpeaker, v.MatchNumber})
+			datas["TeleopAmps"] = append(datas["TeleopAmps"], []int{v.TeleopAmps, v.MatchNumber})
+			datas["TeleopSpeaker"] = append(datas["TeleopSpeaker"], []int{v.TeleopSpeaker, v.MatchNumber})
+			//could use reflection
+		}
+		for k, v := range datas {
+			values := []chart.Value{}
+			for _, val := range v {
+				values = append(values, chart.Value{Value: float64(val[0]), Label: fmt.Sprintf("Match %v", val[1])})
+			}
+			graph := chart.
+				BarChart{
+				Title: k,
+				Background: chart.Style{
+					Padding: chart.Box{
+						Top:    40,
+						Bottom: 40,
+					},
+				},
+				YAxis: chart.YAxis{
+					Name: k,
+				},
+				Height: 612,
+				Width:  1024,
+				Bars:   values,
+			}
+			bufToWrite, _ := os.Create(fmt.Sprintf("graphs/%v.png", k))
+			_ = graph.Render(chart.PNG, bufToWrite)
+		}
+
+		//llreference
 
 		currentAverages = [3][]string{{"ID", "TeamName", "TeamNumber", "MatchesPlayed", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"}, avg, media}
 		matchDatas[0] = []string{"ID", "TeamName", "TeamNumber", "MatchesPlayed", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"}
@@ -542,7 +671,14 @@ func main() {
 		importantMatchData.Refresh()
 		//
 	})
-	vsplit := container.NewVSplit(container.NewVBox(inputTeam, teamButton, matches), importantGeneralData)
+
+	teamChart := canvas.NewImageFromFile("graphs/graph.png")
+	renderChartButton := widget.NewButtonWithIcon("Render Charts", theme.DocumentIcon(), func() {
+		teamCharts.Show()
+	})
+	teamChart.Resize(fyne.NewSize(2048, 612))
+	teamChart.FillMode = canvas.ImageFillOriginal
+	vsplit := container.NewVSplit(container.NewVBox(inputTeam, teamButton, renderChartButton, matches), importantGeneralData)
 	secondvsplit := container.NewVSplit(container.NewVBox(inputMatch, matchButton, matches), importantMatchData)
 	vsplit.SetOffset(0)
 	secondvsplit.SetOffset(0)
@@ -728,31 +864,7 @@ func main() {
 	//	CenterRing:    false,
 	//	Notes:         "",
 	//})
-	db.Create(&data.Schema{
-		TeamName:      "itworks!!",
-		TeamNumber:    1,
-		MatchNumber:   0,
-		AutoAmps:      200,
-		AutoSpeaker:   200,
-		AutoLeave:     true,
-		AutoMiddle:    true,
-		TeleopAmps:    1,
-		TeleopSpeaker: 200,
-		Chain:         true,
-		Harmony:       true,
-		Trap:          true,
-		Park:          false,
-		Ground:        false,
-		Feeder:        false,
-		Mobility:      false,
-		Penalties:     300,
-		TechPenalties: 300,
-		GroundPickup:  false,
-		StartingPos:   0,
-		Defense:       false,
-		CenterRing:    false,
-		Notes:         "",
-	})
+
 	current.SetContent(mainContainer)
 	current.ShowAndRun() //defer?
 	//llvm go sadck jwt auth
