@@ -318,7 +318,7 @@ func generateMedians(tcp [][]string) [][24]string {
 func main() {
 	//lld re
 	graph := chart.
-	BarChart{
+		BarChart{
 		Title: "Autonomous Amps",
 		Background: chart.Style{
 			Padding: chart.Box{
@@ -482,26 +482,26 @@ func main() {
 
 	averageTable := widget.NewTable(
 		func() (int, int) {
-			return len(x), len(x[0])
+			return len(x), len(x[0]) - 2
 		},
 		func() fyne.CanvasObject {
 			return widget.NewLabel("placeholder")
 
 		},
 		func(i widget.TableCellID, o fyne.CanvasObject) {
-			o.(*widget.Label).SetText(x[i.Row][i.Col])
+			o.(*widget.Label).SetText(x[i.Row][i.Col+2])
 		},
 	)
 
 	medianTable := widget.NewTable(
 		func() (int, int) {
-			return len(x), len(x[0])
+			return len(x), len(x[0]) - 2
 		},
 		func() fyne.CanvasObject {
 			return widget.NewLabel("placeholder")
 		},
 		func(i widget.TableCellID, o fyne.CanvasObject) {
-			o.(*widget.Label).SetText(medians[i.Row][i.Col])
+			o.(*widget.Label).SetText(medians[i.Row][i.Col+2])
 		},
 	) //realoads when rendering
 
@@ -566,7 +566,7 @@ func main() {
 		medianWindow.Hide()
 	})
 
-	current.Resize(fyne.NewSize(1200, 700))
+	current.Resize(fyne.NewSize(500, 300))
 	current.SetFixedSize(true)
 	settings.SetCloseIntercept(func() {
 		settings.Hide()
@@ -649,7 +649,7 @@ func main() {
 				values = append(values, chart.Value{Value: float64(val[0]), Label: fmt.Sprintf("Match %v", val[1])})
 			}
 			graph := chart.
-			BarChart{
+				BarChart{
 				Title: k,
 				Background: chart.Style{
 					Padding: chart.Box{
