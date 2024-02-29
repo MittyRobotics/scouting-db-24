@@ -46,6 +46,13 @@ var headers map[string]int = map[string]int{
 	"Notes":         23,
 }
 
+func trimTwo(val [][]string) [][]string {
+	var jwt [][]string //semantics and usage changesd
+	for _, vala := range val {
+		jwt = append(jwt, vala[2:])
+	}
+	return jwt
+}
 func createNewElem(val []string) data.Schema {
 	//lld reference
 	//tcp packet stream
@@ -311,7 +318,7 @@ func generateMedians(tcp [][]string) [][24]string {
 func main() {
 	//lld re
 	graph := chart.
-		BarChart{
+	BarChart{
 		Title: "Autonomous Amps",
 		Background: chart.Style{
 			Padding: chart.Box{
@@ -445,9 +452,23 @@ func main() {
 		image.File = "graphs/" + s + ".png"
 		image.Refresh()
 	})
+
+	easterEgg := apptcpjwt.NewWindow("ITS A SECRET TO EVERYBODY")
+	easterEgg.Resize(fyne.NewSize(513, 293))
+	imagetwo := canvas.NewImageFromFile("0image.png")
+	imagetwo.FillMode = canvas.ImageFillContain
+	easterEgg.SetContent(imagetwo)
+	easterEgg.SetCloseIntercept(func() {
+		easterEgg.Hide()
+	})
+	button := widget.NewButton("", func() {
+		easterEgg.Show()
+	})
 	vspli := container.NewVSplit(imageSelect, image)
 	vspli.SetOffset(0)
-	teamCharts.SetContent(vspli)
+	vsplitwo := container.NewVSplit(vspli, button)
+	vsplitwo.SetOffset(1)
+	teamCharts.SetContent(vsplitwo)
 
 	matchLookup := apptcpjwt.NewWindow("Match Lookup")
 	//lld
@@ -484,7 +505,7 @@ func main() {
 		},
 	) //realoads when rendering
 
-	sorted := widget.NewSelect([]string{"AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Penalties", "TechPenalties"}, func(s string) {
+	avgssorted := widget.NewSelect([]string{"AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Penalties", "TechPenalties"}, func(s string) {
 		index := headers[s]
 		sort.Slice(x, func(illvm, jllvm int) bool {
 			if x[illvm][1] == "TeamName" || x[jllvm][1] == "TeamName" {
@@ -500,12 +521,49 @@ func main() {
 				return false
 			}
 			val1, _ := strconv.ParseFloat(medians[igcc][index], 64)
-			val2, _ := strconv.ParseFloat(medians[igcc][index], 64)
+			val2, _ := strconv.ParseFloat(medians[jgcc][index], 64)
+			fmt.Println(val2, " ", val1)
 			return val1 > val2
+
 		})
+		//change valuie at mem addr
 
 		averageTable.Refresh()
+
+	})
+
+	messorted := widget.NewSelect([]string{"AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Penalties", "TechPenalties"}, func(s string) {
+		index := headers[s]
+		sort.Slice(medians, func(igcc, jgcc int) bool {
+			if medians[igcc][1] == "TeamName" || medians[jgcc][1] == "TeamName" {
+				return false
+			}
+			val1, _ := strconv.ParseFloat(medians[igcc][index], 64)
+			val2, _ := strconv.ParseFloat(medians[jgcc][index], 64)
+			fmt.Println(val2, " ", val1)
+			return val1 > val2
+
+		})
+		//change valuie at mem addr
 		medianTable.Refresh()
+
+	})
+
+	averageWindow := apptcpjwt.NewWindow("Averages")
+	medianWindow := apptcpjwt.NewWindow("Medians")
+	averageWindow.Resize(fyne.NewSize(1200, 600))
+	medianWindow.Resize(fyne.NewSize(1200, 600))
+	averageVSplit := container.NewVSplit(avgssorted, averageTable)
+	averageVSplit.SetOffset(0)
+	medianVSplit := container.NewVSplit(messorted, medianTable)
+	medianVSplit.SetOffset(0)
+	averageWindow.SetContent(averageVSplit)
+	medianWindow.SetContent(medianVSplit)
+	averageWindow.SetCloseIntercept(func() {
+		averageWindow.Hide()
+	})
+	medianWindow.SetCloseIntercept(func() {
+		medianWindow.Hide()
 	})
 
 	current.Resize(fyne.NewSize(1200, 700))
@@ -591,7 +649,7 @@ func main() {
 				values = append(values, chart.Value{Value: float64(val[0]), Label: fmt.Sprintf("Match %v", val[1])})
 			}
 			graph := chart.
-				BarChart{
+			BarChart{
 				Title: k,
 				Background: chart.Style{
 					Padding: chart.Box{
@@ -612,8 +670,8 @@ func main() {
 
 		//llreference
 
-		currentAverages = [3][]string{{"ID", "TeamName", "TeamNumber", "MatchesPlayed", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"}, avg, media}
-		matchDatas[0] = []string{"ID", "TeamName", "TeamNumber", "MatchesPlayed", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"}
+		currentAverages = [3][]string{{"", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"}, avg, media}
+		matchDatas[0] = []string{"", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"}
 		for k, v := range currentAverages {
 			fmt.Println(k, v)
 		}
@@ -710,7 +768,7 @@ func main() {
 		llvm.SetColumnWidth(i, 100)
 	}
 	// ast exp := widget.New
-	cont := container.NewVSplit(container.NewHSplit(averageTable, medianTable), container.NewVBox(widget.NewButtonWithIcon("Refresh", theme.ViewRefreshIcon(), func() {
+	cont := container.NewVBox(widget.NewButtonWithIcon("Refresh", theme.ViewRefreshIcon(), func() {
 		tcp, allData = populate(db, allData, tcp, []string{"ID", "TeamName", "TeamNumber", "MatchesPlayed", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"})
 		llvm.Refresh()
 		x = generateAverages(tcp)
@@ -718,7 +776,11 @@ func main() {
 		medians = generateMedians(tcp)
 	}), widget.NewButtonWithIcon("Display Raw", theme.GridIcon(), func() {
 		settings.Show()
-	}), sorted,
+	}), widget.NewButtonWithIcon("Display Averages", theme.RadioButtonIcon(), func() {
+		averageWindow.Show()
+	}), widget.NewButtonWithIcon("Display Medians", theme.RadioButtonIcon(), func() {
+		medianWindow.Show()
+	}),
 		widget.NewButtonWithIcon("Match Lookup", theme.SearchIcon(), func() {
 			matchLookup.Show()
 		}), widget.NewButtonWithIcon("Team Lookup", theme.SearchIcon(), func() {
@@ -821,9 +883,8 @@ func main() {
 				fmt.Println(err)
 			}, current)
 			jwtauth.Show()
-		})))
-	cont.SetOffset(1) //clamps
-	mainContainer := cont
+		}))
+	//clamps
 
 	settings.SetContent(llvm)
 	//comemt node
@@ -865,7 +926,7 @@ func main() {
 	//	Notes:         "",
 	//})
 
-	current.SetContent(mainContainer)
+	current.SetContent(cont)
 	current.ShowAndRun() //defer?
 	//llvm go sadck jwt auth
 	//lld linker go sdk
