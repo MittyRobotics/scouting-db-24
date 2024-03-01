@@ -53,35 +53,53 @@ func trimTwo(val [][]string) [][]string {
 	}
 	return jwt
 }
-func createNewElem(val []string) data.Schema {
+func createNewElem(vala map[string]string) data.Schema {
 	//lld reference
 	//tcp packet stream
 
 	//llvm reference
 	schem := data.Schema{}
-	schem.TeamName = val[1]
-	schem.TeamNumber, _ = strconv.Atoi(val[2])
-	schem.MatchNumber, _ = strconv.Atoi(val[3]) //value, reference
-	schem.AutoAmps, _ = strconv.Atoi(val[4])
-	schem.AutoSpeaker, _ = strconv.Atoi(val[5])
-	schem.AutoLeave, _ = strconv.ParseBool(val[6])
-	schem.AutoMiddle, _ = strconv.ParseBool(val[7])
-	schem.TeleopAmps, _ = strconv.Atoi(val[8])
-	schem.TeleopSpeaker, _ = strconv.Atoi(val[9])
-	schem.Chain, _ = strconv.ParseBool(val[10])
-	schem.Harmony, _ = strconv.ParseBool(val[11])
-	schem.Trap, _ = strconv.ParseBool(val[12])
-	schem.Park, _ = strconv.ParseBool(val[13])
-	schem.Ground, _ = strconv.ParseBool(val[14])
-	schem.Feeder, _ = strconv.ParseBool(val[15])
-	schem.Mobility, _ = strconv.ParseBool(val[16])
-	schem.Penalties, _ = strconv.Atoi(val[17])
-	schem.TechPenalties, _ = strconv.Atoi(val[18])
-	schem.GroundPickup, _ = strconv.ParseBool(val[19])
-	schem.StartingPos, _ = strconv.Atoi(val[20])
-	schem.Defense, _ = strconv.ParseBool(val[21])
-	schem.CenterRing, _ = strconv.ParseBool(val[22])
-	schem.Notes = val[23]
+	schem.TeamName = vala["TEAMNUM"]
+	schem.TeamNumber, _ = strconv.Atoi(vala["TEAMNUM"])
+	schem.MatchNumber, _ = strconv.Atoi(vala["MATCHNUM"]) //value, reference
+	schem.AutoAmps, _ = strconv.Atoi(vala["AUTONAMP"])
+	schem.AutoSpeaker, _ = strconv.Atoi(vala["AUTONSPEAKER"])
+	schem.AutoLeave, _ = strconv.ParseBool(vala["MOBILITY"])
+	schem.AutoMiddle, _ = strconv.ParseBool(vala["CENTERRING"])
+	schem.TeleopAmps, _ = strconv.Atoi(vala["TELEOPAMP"])
+	schem.TeleopSpeaker, _ = strconv.Atoi(vala["TELEOPSPEAKER"])
+	//schem.Chain, _ = strconv.ParseBool(vala["TEAMNUM"])
+	//schem.Park, _ = strconv.ParseBool(vala["TEAMNUM"])
+	switch vala["ENDGAME"] {
+	case "PARK":
+		schem.Park = true
+		break
+	case "CHAIN":
+		schem.Chain = true
+		break
+	case "NONE":
+		schem.Park = false
+		schem.Chain = false
+		break
+	}
+	schem.Harmony, _ = strconv.ParseBool(vala["HARMONY"])
+	schem.Trap, _ = strconv.ParseBool(vala["TRAP"])
+
+	schem.Ground, _ = strconv.ParseBool(vala["GROUNDPICKUP"])
+	schem.Feeder, _ = strconv.ParseBool(vala["FEEDER"])
+	schem.Mobility, _ = strconv.ParseBool(vala["MOBILITY"])
+	schem.Penalties, _ = strconv.Atoi(vala["PENALTIES"])
+	schem.TechPenalties, _ = strconv.Atoi(vala["TECHPENALTIES"])
+	schem.GroundPickup, _ = strconv.ParseBool(vala["GROUNDPICKUP"])
+
+	if vala["STARTINGPOS"] == "" {
+		schem.StartingPos = 1
+	} else {
+		schem.StartingPos, _ = strconv.Atoi(string(rune((vala["STARTINGPOS"][0]))))
+	}
+	schem.Defense, _ = strconv.ParseBool(vala["DEFENDING"])
+	schem.CenterRing, _ = strconv.ParseBool(vala["CENTERRING"])
+	schem.Notes = vala["NOTES"]
 	return schem
 
 } //llvm go sdk
@@ -318,7 +336,7 @@ func generateMedians(tcp [][]string) [][24]string {
 func main() {
 	//lld re
 	graph := chart.
-		BarChart{
+	BarChart{
 		Title: "Autonomous Amps",
 		Background: chart.Style{
 			Padding: chart.Box{
@@ -427,6 +445,9 @@ func main() {
 	apptcpjwt := app.New()
 
 	//label := widget.NewLabel("Settings")
+	label := widget.NewRichTextWithText("Control Panel")
+	label.ParseMarkdown("# **Control Panel**")
+	divider := widget.NewSeparator()
 
 	current := apptcpjwt.NewWindow("TKO Crescendo Tracker (patented)")
 	settings := apptcpjwt.NewWindow("Data")
@@ -495,6 +516,7 @@ func main() {
 
 	medianTable := widget.NewTable(
 		func() (int, int) {
+			//commetnode reference llvm referecne
 			return len(x), len(x[0]) - 2
 		},
 		func() fyne.CanvasObject {
@@ -649,7 +671,7 @@ func main() {
 				values = append(values, chart.Value{Value: float64(val[0]), Label: fmt.Sprintf("Match %v", val[1])})
 			}
 			graph := chart.
-				BarChart{
+			BarChart{
 				Title: k,
 				Background: chart.Style{
 					Padding: chart.Box{
@@ -768,12 +790,14 @@ func main() {
 		llvm.SetColumnWidth(i, 100)
 	}
 	// ast exp := widget.New
-	cont := container.NewVBox(widget.NewButtonWithIcon("Refresh", theme.ViewRefreshIcon(), func() {
+	cont := container.NewVBox(label, divider, widget.NewButtonWithIcon("Refresh", theme.ViewRefreshIcon(), func() {
 		tcp, allData = populate(db, allData, tcp, []string{"ID", "TeamName", "TeamNumber", "MatchesPlayed", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"})
 		llvm.Refresh()
 		x = generateAverages(tcp)
 		medians = generateMedians(tcp)
 		medians = generateMedians(tcp)
+		medianTable.Refresh()
+		averageTable.Refresh()
 	}), widget.NewButtonWithIcon("Display Raw", theme.GridIcon(), func() {
 		settings.Show()
 	}), widget.NewButtonWithIcon("Display Averages", theme.RadioButtonIcon(), func() {
@@ -826,52 +850,29 @@ func main() {
 								if err != nil {
 									return
 								}
-								//toAdd := data.Schema{}
-								//value := reflect.ValueOf(&toAdd).Elem()
-								//vals := map[string][]int{ //ENDGAME SPECIAL CASE
-								//	"TEAMNUM":       {1, 2},
-								//	"MATCHNUM":      {3},
-								//	"MOBILITY":      {16},
-								//	"DEFENDING":     {21},
-								//	"STARTINGPOS":   {20},
-								//	"AUTONSPEAKER":  {5},
-								//	"AUTONAMP":      {4},
-								//	"CENTERRING":    {22},
-								//	"TELEOPSPEAKER": {9},
-								//	"TELEOPAMP":     {8},
-								//	"TRAP":          {12},
-								//	"HARMONY":       {11},
-								//	"GROUND":        {14},
-								//	"FEEDER":        {15},
-								//	"PENALTIES":     {17},
-								//	"TECHPENALTIES": {18},
-								//	"NOTES":         {23},
-								//}
-								//endgame := map[string]int{
-								//	"Onstage": 10,
-								//	"Parked":  13,
-								//}
 								buffer := make([]byte, val.Size())
-								toAdd := []string{}
+								toAdd := map[string]string{}
 								_, _ = file.Read(buffer)
-								lines := strings.Split(string(buffer), "\n")
-								for _, valk := range lines {
-									internal := strings.Split(valk, ": ")
-									if internal[0] == "STARTINGPOS" {
-										if len(internal) == 1 {
-											internal = append(internal, "1")
-										} else {
-											internal[1] = string(internal[1][0])
-										}
-
+								split := strings.Split(string(buffer), "\n")
+								for _, v := range split {
+									splittwo := strings.Split(v, ":")
+									if len(splittwo) == 2 {
+										toAdd[splittwo[0]] = strings.Trim(splittwo[1], " ")
+									} else {
+										toAdd[splittwo[0]] = ""
 									}
-									if internal[0] == "ENDGAME" {
-									}
-
 								}
-								final := createNewElem(toAdd)
-								db.Create(&final)
-								fmt.Println(string(buffer))
+								vale := createNewElem(toAdd)
+								db.Create(&vale)
+
+								tcp, allData = populate(db, allData, tcp, []string{"ID", "TeamName", "TeamNumber", "MatchesPlayed", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"})
+								llvm.Refresh()
+								x = generateAverages(tcp)
+								medians = generateMedians(tcp)
+								medians = generateMedians(tcp)
+								medianTable.Refresh()
+								averageTable.Refresh()
+
 							}
 
 							//a random valid that actually exsists google oauth key scraped from the internet is:  "client_id": "32555940559.apps.googleusercontent.com",
