@@ -829,7 +829,7 @@ func main() {
 			if ind > 2 {
 				color = "red"
 			}
-			performance := []string{fmt.Sprintf("Performance (%v):", color)}
+			performance := []string{fmt.Sprintf("Perf. (%v):", color)}
 			for _, v := range tcp {
 				if v[3] == inputMatch.Text && (v[1] == teamName || v[2] == teamName) {
 					performance = append(performance, v[1:]...)
@@ -837,7 +837,6 @@ func main() {
 			}
 			if len(performance) == 1 {
 				//data not fetched yet
-				performance[0] = fmt.Sprintf("Hasn't Played (%v):", color)
 				performance = append(performance, make([]string, 24)...)
 			}
 
