@@ -460,6 +460,70 @@ func main() {
 	teamLookup.Resize(fyne.NewSize(1200, 600))
 	teamLookup.SetFixedSize(true)
 
+	matchScheduleShow := apptcpjwt.NewWindow("Match Schedule")
+	matchScheduleShow.Resize(fyne.NewSize(1200, 600))
+	matchScheduleShow.SetFixedSize(true)
+	matchScheduleShow.SetCloseIntercept(func() {
+		matchScheduleShow.Hide()
+	})
+
+	matchScheduleShowButton := widget.NewButtonWithIcon("Show Match Schedule", theme.RadioButtonCheckedIcon(), func() {
+		matchScheduleShow.Show()
+	})
+	matchSchedule := [][]string{{"Number", "Blue 1", "Blue 2", "Blue 3", "Red 1", "Red 2", "Red 3"}}
+	for i := 0; i < 77; i++ {
+		matchSchedule = append(matchSchedule, make([]string, 7))
+	}
+	matchScheduleTable := widget.NewTable(
+		func() (int, int) {
+			return len(matchSchedule), len(matchSchedule[0])
+		},
+		func() fyne.CanvasObject {
+			return widget.NewLabel("placeholder")
+		},
+		func(i widget.TableCellID, o fyne.CanvasObject) {
+			o.(*widget.Label).SetText(matchSchedule[i.Row][i.Col])
+		},
+	)
+	matchScheduleImportButton := widget.NewButton("Import Match Schedule", func() {
+		dia := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
+			if err != nil {
+				dialog.ShowError(err, matchScheduleShow)
+				return
+			}
+			if reader.URI().Extension() != ".CSV" && reader.URI().Extension() != ".csv" {
+				dialog.ShowError(errors.New(fmt.Sprintf("Invalid file type; expecting csv, not %v", reader.URI().Extension())), matchScheduleShow)
+				return
+			}
+			defer reader.Close()
+			buf := make([]byte, 1000000)
+			_, err = reader.Read(buf)
+			if err != nil {
+				dialog.ShowError(err, matchScheduleShow)
+				return
+			}
+			total := [][]string{}
+			total = append(total, []string{"Number", "Blue 1", "Blue 2", "Blue 3", "Red 1", "Red 2", "Red 3"})
+			lines := strings.Split(string(buf), "\n")
+			fmt.Println("length: ", string(buf))
+			for _, line := range lines {
+				fmt.Println(line)
+				values := strings.Split(line, ",")
+				if len(values) < 7 {
+					continue
+				}
+				total = append(total, []string{values[1], values[2], values[3], values[4], values[5], values[6], values[7]})
+			}
+			matchSchedule = total
+			matchScheduleTable.Refresh()
+
+		}, matchScheduleShow)
+		dia.Show()
+	})
+
+	vsplitMatchTables := container.NewVSplit(matchScheduleImportButton, matchScheduleTable)
+	vsplitMatchTables.SetOffset(0)
+	matchScheduleShow.SetContent(vsplitMatchTables)
 	teamCharts := apptcpjwt.NewWindow("Team Charts")
 	teamCharts.Resize(fyne.NewSize(1024, 1024))
 	teamCharts.SetCloseIntercept(func() {
@@ -814,7 +878,7 @@ func main() {
 		medians = generateMedians(tcp)
 		medianTable.Refresh()
 		averageTable.Refresh()
-	}), widget.NewButtonWithIcon("Display Raw", theme.GridIcon(), func() {
+	}), matchScheduleShowButton, widget.NewButtonWithIcon("Display Raw", theme.GridIcon(), func() {
 		settings.Show()
 	}), widget.NewButtonWithIcon("Display Averages", theme.RadioButtonIcon(), func() {
 		averageWindow.Show()
