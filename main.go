@@ -54,6 +54,10 @@ func trimTwo(val [][]string) [][]string {
 	}
 	return jwt
 }
+
+//the key is the match number, the value is the team numbers in B{1..4} and R{1..4}
+var matchIndex map[string][]string
+
 func createNewElem(vala map[string]string) data.Schema {
 	//lld reference
 	//tcp packet stream
@@ -337,7 +341,7 @@ func generateMedians(tcp [][]string) [][24]string {
 func main() {
 	//lld re
 	graph := chart.
-		BarChart{
+	BarChart{
 		Title: "Autonomous Amps",
 		Background: chart.Style{
 			Padding: chart.Box{
@@ -512,6 +516,7 @@ func main() {
 				if len(values) < 7 {
 					continue
 				}
+				matchIndex[values[1]] = values[2:]
 				total = append(total, []string{values[1], values[2], values[3], values[4], values[5], values[6], values[7]})
 			}
 			matchSchedule = total
@@ -749,7 +754,7 @@ func main() {
 			}
 
 			graph := chart.
-				BarChart{
+			BarChart{
 				Title: k,
 				Background: chart.Style{
 					Padding: chart.Box{
