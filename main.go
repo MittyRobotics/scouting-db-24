@@ -880,7 +880,7 @@ func main() {
 	teamChart.Resize(fyne.NewSize(2048, 612))
 	teamChart.FillMode = canvas.ImageFillOriginal
 	vsplit := container.NewVSplit(container.NewVBox(inputTeam, teamButton, renderChartButton, matches), importantGeneralData)
-	secondvsplit := container.NewVSplit(container.NewVBox(inputMatch, matchButton, matches), importantMatchData)
+	secondvsplit := container.NewVSplit(container.NewVBox(inputMatch, matchButton), importantMatchData)
 	vsplit.SetOffset(0)
 	secondvsplit.SetOffset(0)
 	matchLookup.SetContent(secondvsplit)
