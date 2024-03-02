@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -646,6 +647,10 @@ func main() {
 			if v[1] == inputTeam.Text {
 				avg = append(avg, v[4:]...)
 			}
+		}
+		if len(avg) == 1 {
+			dialog.ShowError(errors.New(fmt.Sprintf("Team '%v' not found", inputTeam.Text)), teamLookup)
+			return
 		}
 		media := []string{"Medians: "}
 		for _, v := range medians {
