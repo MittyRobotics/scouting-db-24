@@ -795,13 +795,13 @@ func main() {
 			avg := []string{"Averages: "}
 			for _, v := range x {
 				if v[1] == teamName[1] {
-					avg = append(avg, v[:]...)
+					avg = append(avg, v[1:]...)
 				}
 			}
 			media := []string{"Medians: "}
 			for _, v := range medians {
 				if v[2] == teamName[1] {
-					media = append(media, v[:]...)
+					media = append(media, v[1:]...)
 				}
 				//comment node
 			}
@@ -814,7 +814,7 @@ func main() {
 
 			matchDatas[(ind*3)+1] = avg
 			matchDatas[ind*3+2] = media
-			matchDatas[0] = []string{"ID", "TeamName", "TeamNumber", "MatchesPlayed", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"}
+			matchDatas[0] = []string{"ID", "TeamName", "TeamNumber", "Match", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"}
 			for k, v := range matchDatas {
 				fmt.Println(k, v)
 			}
