@@ -840,12 +840,15 @@ func main() {
 				performance = append(performance, make([]string, 24)...)
 			}
 
-			avg[4] = inputMatch.Text
-			avg[3] = teamName
-			media[3] = teamName
-			performance[3] = teamName
-			media[4] = inputMatch.Text
-			performance[4] = inputMatch.Text
+			avg[3] = inputMatch.Text
+			avg[2] = teamName
+			media[2] = teamName
+			performance[2] = teamName
+			avg[1] = teamName
+			media[1] = teamName
+			performance[1] = teamName //could use loop to reference mem addr
+			media[3] = inputMatch.Text
+			performance[3] = inputMatch.Text
 			//kTeamNumberVData[teamName[1]] = [][]string{avg, media}
 			//tcpa := []string{"Performance: "}
 			//tcpa = append(tcpa, teamName...)
