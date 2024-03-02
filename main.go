@@ -336,7 +336,7 @@ func generateMedians(tcp [][]string) [][24]string {
 func main() {
 	//lld re
 	graph := chart.
-	BarChart{
+		BarChart{
 		Title: "Autonomous Amps",
 		Background: chart.Style{
 			Padding: chart.Box{
@@ -637,6 +637,7 @@ func main() {
 		})
 
 	teamButton := widget.NewButton("LOOKUP", func() {
+		teamCharts.Hide()
 		if inputTeam.Text == "" {
 			return
 		}
@@ -659,19 +660,27 @@ func main() {
 			"TeleopSpeaker": {},
 		}
 		for _, v := range allData {
+			if v.TeamName != inputTeam.Text || strconv.Itoa(v.TeamNumber) != inputTeam.Text {
+				continue
+			}
 			datas["AutoAmps"] = append(datas["AutoAmps"], []int{v.AutoAmps, v.MatchNumber})
 			datas["AutoSpeaker"] = append(datas["AutoSpeaker"], []int{v.AutoSpeaker, v.MatchNumber})
 			datas["TeleopAmps"] = append(datas["TeleopAmps"], []int{v.TeleopAmps, v.MatchNumber})
 			datas["TeleopSpeaker"] = append(datas["TeleopSpeaker"], []int{v.TeleopSpeaker, v.MatchNumber})
 			//could use reflection
 		}
+		fmt.Println(datas)
 		for k, v := range datas {
+			sort.Slice(v, func(i, j int) bool {
+				return v[i][1] < v[j][1]
+			})
 			values := []chart.Value{}
 			for _, val := range v {
-				values = append(values, chart.Value{Value: float64(val[0]), Label: fmt.Sprintf("Match %v", val[1])})
+				values = append(values, chart.Value{Value: float64(val[0]), Label: fmt.Sprintf("Match %v (Score: %v)", val[1], val[0])})
 			}
+
 			graph := chart.
-			BarChart{
+				BarChart{
 				Title: k,
 				Background: chart.Style{
 					Padding: chart.Box{
@@ -680,7 +689,8 @@ func main() {
 					},
 				},
 				YAxis: chart.YAxis{
-					Name: k,
+					Name:  k,
+					Range: &chart.ContinuousRange{Min: 0, Max: 10},
 				},
 				Height: 612,
 				Width:  1024,
@@ -688,6 +698,7 @@ func main() {
 			}
 			bufToWrite, _ := os.Create(fmt.Sprintf("graphs/%v.png", k))
 			_ = graph.Render(chart.PNG, bufToWrite)
+
 		}
 
 		//llreference
@@ -864,7 +875,7 @@ func main() {
 								}
 								vale := createNewElem(toAdd)
 								db.Create(&vale)
-
+								//lld linker scripts mov rsi, rdi
 								tcp, allData = populate(db, allData, tcp, []string{"ID", "TeamName", "TeamNumber", "MatchesPlayed", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"})
 								llvm.Refresh()
 								x = generateAverages(tcp)
