@@ -55,8 +55,8 @@ func trimTwo(val [][]string) [][]string {
 	return jwt
 }
 
-//the key is the match number, the value is the team numbers in B{1..4} and R{1..4}
-var matchIndex map[string][]string
+// the key is the match number, the value is the team numbers in B{1..4} and R{1..4}
+var matchIndex = map[string][]string{}
 
 func createNewElem(vala map[string]string) data.Schema {
 	//lld reference
@@ -341,7 +341,7 @@ func generateMedians(tcp [][]string) [][24]string {
 func main() {
 	//lld re
 	graph := chart.
-	BarChart{
+		BarChart{
 		Title: "Autonomous Amps",
 		Background: chart.Style{
 			Padding: chart.Box{
@@ -516,7 +516,7 @@ func main() {
 				if len(values) < 7 {
 					continue
 				}
-				matchIndex[values[1]] = values[2:]
+				matchIndex[values[1]] = values[2 : len(values)-1]
 				total = append(total, []string{values[1], values[2], values[3], values[4], values[5], values[6], values[7]})
 			}
 			matchSchedule = total
@@ -754,7 +754,7 @@ func main() {
 			}
 
 			graph := chart.
-			BarChart{
+				BarChart{
 				Title: k,
 				Background: chart.Style{
 					Padding: chart.Box{
@@ -788,51 +788,88 @@ func main() {
 	})
 	matchButton := widget.NewButton("LOOKUP", func() {
 		fmt.Println(matchNumbersR)
+		if len(matchIndex) == 0 {
+			dialog.ShowError(errors.New("match schedule not imported"), matchLookup)
+			return
+		}
 		if inputMatch.Text == "" {
 			return
 		}
-		vals, ok := matchNumbersR[inputMatch.Text]
+		//vals, ok := matchNumbersR[inputMatch.Text]
+		vals, ok := matchIndex[inputMatch.Text] //vals is an array of team numbers
 		if !ok {
 			return
 		}
-		kTeamNumberVData := map[string][][]string{}
+		//kTeamNumberVData := map[string][][]string{}
 		for ind, teamName := range vals {
 			avg := []string{"Averages: "}
 			for _, v := range x {
-				if v[1] == teamName[1] {
+				if v[1] == teamName {
 					avg = append(avg, v[1:]...)
 				}
 			}
+			if len(avg) == 1 {
+				//data not fetched yet
+				avg[0] = "No Data"
+				avg = append(avg, make([]string, 24)...)
+			}
 			media := []string{"Medians: "}
 			for _, v := range medians {
-				if v[2] == teamName[1] {
+				if v[2] == teamName {
 					media = append(media, v[1:]...)
 				}
 				//comment node
 			}
+			if len(media) == 1 {
+				//data not fetched yet
+				media[0] = "No Data"
+				media = append(media, make([]string, 24)...)
+			}
+			color := "blue"
+			if ind > 2 {
+				color = "red"
+			}
+			performance := []string{fmt.Sprintf("Performance (%v):", color)}
+			for _, v := range tcp {
+				if v[3] == inputMatch.Text && (v[1] == teamName || v[2] == teamName) {
+					performance = append(performance, v[1:]...)
+				}
+			}
+			if len(performance) == 1 {
+				//data not fetched yet
+				performance[0] = fmt.Sprintf("Hasn't Played (%v):", color)
+				performance = append(performance, make([]string, 24)...)
+			}
+
 			avg[4] = inputMatch.Text
+			avg[3] = teamName
+			media[3] = teamName
+			performance[3] = teamName
 			media[4] = inputMatch.Text
-			kTeamNumberVData[teamName[1]] = [][]string{avg, media}
-			tcpa := []string{"Performance: "}
-			tcpa = append(tcpa, teamName...)
-			kTeamNumberVData[teamName[1]] = append(kTeamNumberVData[teamName[1]], tcpa)
+			performance[4] = inputMatch.Text
+			//kTeamNumberVData[teamName[1]] = [][]string{avg, media}
+			//tcpa := []string{"Performance: "}
+			//tcpa = append(tcpa, teamName...)
+			//kTeamNumberVData[teamName[1]] = append(kTeamNumberVData[teamName[1]], tcpa)
 
 			matchDatas[(ind*3)+1] = avg
 			matchDatas[ind*3+2] = media
+			matchDatas[ind*3+3] = performance
 			matchDatas[0] = []string{"ID", "TeamName", "TeamNumber", "Match", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"}
 			for k, v := range matchDatas {
 				fmt.Println(k, v)
 			}
+			fmt.Println(vals)
 
 		}
 		//.env js libray me omw to make serverside js unordered hashmap
-		val := 1
-		for _, v := range kTeamNumberVData {
-			for _, vala := range v {
-				matchDatas[val] = vala
-				val++
-			}
-		}
+		//val := 1
+		//for _, v := range kTeamNumberVData {
+		//	for _, vala := range v {
+		//		matchDatas[val] = vala
+		//		val++
+		//	}
+		//}
 		importantMatchData.Refresh()
 		//
 	})
