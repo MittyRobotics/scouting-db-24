@@ -675,8 +675,8 @@ func main() {
 	//teamData := widget.NewTextGridFromString("LLVM REFERENCE\nJWTAUTH")
 	//teamDataMedians := widget.NewTextGridFromString("LLVM REFERENCE\nJWTAUTH")
 	currentAverages := [3][]string{}
-	matchDatas := [19][]string{}
-	for i := 0; i < 19; i++ {
+	matchDatas := [25][]string{}
+	for i := 0; i < 25; i++ {
 		matchDatas[i] = make([]string, 24)
 	}
 	for i := 0; i < 3; i++ {
@@ -854,9 +854,10 @@ func main() {
 			//tcpa = append(tcpa, teamName...)
 			//kTeamNumberVData[teamName[1]] = append(kTeamNumberVData[teamName[1]], tcpa)
 
-			matchDatas[(ind*3)+1] = avg
-			matchDatas[ind*3+2] = media
-			matchDatas[ind*3+3] = performance
+			matchDatas[(ind*4)+1] = avg
+			matchDatas[ind*4+2] = media
+			matchDatas[ind*4+3] = performance
+			matchDatas[ind*4+4] = make([]string, 25)
 			matchDatas[0] = []string{"ID", "TeamName", "TeamNumber", "Match", "AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Chain", "Harmony", "Trap", "Park", "Ground", "Feeder", "Mobility", "Penalities", "Tech-Pens", "Ground-Pick", "Starting-Pos", "Defense", "CenterRing", "Notes"}
 			for k, v := range matchDatas {
 				fmt.Println(k, v)
