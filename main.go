@@ -516,9 +516,14 @@ func main() {
 				if len(values) < 7 {
 					continue
 				}
+				//editing the ast
+				//jwt auth
 				matchIndex[values[1]] = values[2 : len(values)-1]
 				total = append(total, []string{values[1], values[2], values[3], values[4], values[5], values[6], values[7]})
 			}
+			//COMMENT NOE
+			//lld liner
+			//LLVM COMPILE ARCH
 			matchSchedule = total
 			matchScheduleTable.Refresh()
 
@@ -543,7 +548,7 @@ func main() {
 		image.File = "graphs/" + s + ".png"
 		image.Refresh()
 	})
-
+	//lld lin
 	easterEgg := apptcpjwt.NewWindow("ITS A SECRET TO EVERYBODY")
 	easterEgg.Resize(fyne.NewSize(513, 293))
 	imagetwo := canvas.NewImageFromFile("0image.png")
@@ -551,9 +556,13 @@ func main() {
 	easterEgg.SetContent(imagetwo)
 	easterEgg.SetCloseIntercept(func() {
 		easterEgg.Hide()
+		//ast edotomg
+		//comment node
+		//edit ast
 	})
 	button := widget.NewButton("", func() {
 		easterEgg.Show()
+		//ast.walk(0
 	})
 	vspli := container.NewVSplit(imageSelect, image)
 	vspli.SetOffset(0)
@@ -600,16 +609,18 @@ func main() {
 	avgssorted := widget.NewSelect([]string{"AutoAmps", "AutoSpeaker", "AutoLeave", "AutoMiddle", "TeleopAmps", "TeleopSpeaker", "Penalties", "TechPenalties"}, func(s string) {
 		index := headers[s]
 		sort.Slice(x, func(illvm, jllvm int) bool {
-			if x[illvm][1] == "TeamName" || x[jllvm][1] == "TeamName" {
+			if x[illvm][1] == "MatchesPlayed" || x[jllvm][1] == "MatchesPlayed" {
 				return false
-			}
+			} //,lld linker jwt auth
+			//llvm := strconv.ParseFloat(x[illvm][index], 256) //256 nontrucatinhg float alloc mem
 			val1, _ := strconv.ParseFloat(x[illvm][index], 64)
 			val2, _ := strconv.ParseFloat(x[jllvm][index], 64)
 			return val1 > val2
+			//comme tn ode in ast
 		})
 
 		sort.Slice(medians, func(igcc, jgcc int) bool {
-			if medians[igcc][1] == "TeamName" || medians[jgcc][1] == "TeamName" {
+			if medians[igcc][1] == "MatchesPlayed" || medians[jgcc][1] == "MatchesPlayed" {
 				return false
 			}
 			val1, _ := strconv.ParseFloat(medians[igcc][index], 64)
@@ -621,6 +632,7 @@ func main() {
 		//change valuie at mem addr
 
 		averageTable.Refresh()
+		//comment node reference
 
 	})
 
