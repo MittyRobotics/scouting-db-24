@@ -464,6 +464,122 @@ func main() {
 	teamLookup.Resize(fyne.NewSize(1200, 600))
 	teamLookup.SetFixedSize(true)
 
+	teamLookupN := apptcpjwt.NewWindow("Team Lookup V 2.0")
+	teamLookupN.Resize(fyne.NewSize(1000, 600))
+	teamLookupN.SetCloseIntercept(func() {
+		teamLookupN.Hide()
+	})
+	teamLookupNChoice := ""
+	teamLookupNDropDown := widget.NewSelect([]string{"AutoAmps", "AutoSpeaker", "AutoLeave", "TeleopAmps", "TeleopSpeaker", "Penalties", "TechPenalties"}, func(s string) { teamLookupNChoice = s })
+
+	teamLookupNAverages := widget.NewLabel("")
+	teamLookupNMedians := widget.NewLabel("")
+
+	teamLookupNChart := canvas.NewImageFromFile("graph.png")
+	teamLookupNChart.SetMinSize(fyne.NewSize(1024, 400))
+	teamLookupNChart.FillMode = canvas.ImageFillContain
+	teamLookupNChart.Resize(fyne.NewSize(1024, 400))
+
+	teamLookupNSearch := widget.NewEntry()
+	teamLookupNSearch.SetPlaceHolder("Team Number") //lld linker jwt
+
+	teamLookupNHBox := container.NewHSplit(teamLookupNSearch, teamLookupNDropDown)
+	teamLookupNHBox.SetOffset(0.5)
+	previous := ""
+	teamLookupNRender := widget.NewButton("FETCH", func() {
+		datas := map[string][][]int{
+			"AutoAmps":      {},
+			"AutoSpeaker":   {},
+			"TeleopAmps":    {},
+			"TeleopSpeaker": {},
+		}
+		if previous != teamLookupNSearch.Text {
+			increments := []chart.Tick{}
+			for i := 1; i < 11; i++ {
+				increments = append(increments, chart.Tick{Value: float64(i), Label: fmt.Sprintf("%.2f", float64(i))})
+			}
+
+			for _, v := range allData {
+
+				if v.TeamName != teamLookupNSearch.Text || strconv.Itoa(v.TeamNumber) != teamLookupNSearch.Text {
+					continue
+				}
+				datas["AutoAmps"] = append(datas["AutoAmps"], []int{v.AutoAmps, v.MatchNumber})
+				datas["AutoSpeaker"] = append(datas["AutoSpeaker"], []int{v.AutoSpeaker, v.MatchNumber})
+				datas["TeleopAmps"] = append(datas["TeleopAmps"], []int{v.TeleopAmps, v.MatchNumber})
+				datas["TeleopSpeaker"] = append(datas["TeleopSpeaker"], []int{v.TeleopSpeaker, v.MatchNumber})
+				//could use reflection
+				for k, v := range datas {
+					sort.Slice(v, func(i, j int) bool {
+						return v[i][1] < v[j][1]
+					})
+					values := []chart.Value{}
+					for _, val := range v {
+						values = append(values, chart.Value{Value: float64(val[0]), Label: fmt.Sprintf("Match %v (Score: %v)", val[1], val[0])})
+					}
+
+					graph := chart.
+						BarChart{
+						Title: k,
+						Background: chart.Style{
+							Padding: chart.Box{
+								Top:    40,
+								Bottom: 40,
+							},
+						},
+						YAxis: chart.YAxis{
+							Name:      k,
+							Range:     &chart.ContinuousRange{Min: 0, Max: 10},
+							TickStyle: chart.Style{StrokeWidth: 2.0, StrokeColor: chart.ColorBlack},
+							Ticks:     increments,
+						},
+						Height: 612,
+						Width:  1024,
+						Bars:   values,
+					}
+					bufToWrite, _ := os.Create(fmt.Sprintf("graphs/%v.png", k))
+					_ = graph.Render(chart.PNG, bufToWrite)
+
+				}
+			}
+			previous = teamLookupNSearch.Text
+		}
+		exists := false
+		for _, val := range x {
+			if teamLookupNSearch.Text == val[2] {
+				exists = true
+				teamLookupNAverages.SetText(fmt.Sprintf("Averages: %v", val[headers[teamLookupNChoice]]))
+			}
+
+		}
+		if !exists {
+			dialog.ShowError(errors.New(fmt.Sprintf("Team '%v' not found", teamLookupNSearch.Text)), teamLookupN)
+		}
+		for _, val := range medians {
+			if teamLookupNSearch.Text == val[2] {
+				teamLookupNMedians.SetText(fmt.Sprintf("Medians: %v", val[headers[teamLookupNChoice]]))
+			}
+		}
+
+		//ternary
+		//unicode.all
+
+		fmt.Println(datas)
+
+		teamLookupNChart.File = "graphs/" + teamLookupNChoice + ".png"
+		teamLookupNChart.Refresh()
+
+		//if !exists {
+		//	dialog.ShowError(errors.New(fmt.Sprintf("Team '%v' not found", teamLookupNSearch.Text)), teamLookupN)
+		//}
+	})
+
+	teamLookupN.SetContent(container.NewVBox(teamLookupNHBox, teamLookupNRender, teamLookupNChart, teamLookupNAverages, teamLookupNMedians))
+
+	teamLookupNShow := widget.NewButtonWithIcon("Show Team Lookup lld", theme.AccountIcon(), func() {
+		teamLookupN.Show()
+	})
+
 	matchScheduleShow := apptcpjwt.NewWindow("Match Schedule")
 	matchScheduleShow.Resize(fyne.NewSize(1200, 600))
 	matchScheduleShow.SetFixedSize(true)
@@ -935,7 +1051,7 @@ func main() {
 		medians = generateMedians(tcp)
 		medianTable.Refresh()
 		averageTable.Refresh()
-	}), matchScheduleShowButton, widget.NewButtonWithIcon("Display Raw", theme.GridIcon(), func() {
+	}), matchScheduleShowButton, teamLookupNShow, widget.NewButtonWithIcon("Display Raw", theme.GridIcon(), func() {
 		settings.Show()
 	}), widget.NewButtonWithIcon("Display Averages", theme.RadioButtonIcon(), func() {
 		averageWindow.Show()
