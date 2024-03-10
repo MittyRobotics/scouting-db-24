@@ -470,7 +470,7 @@ func main() {
 		teamLookupN.Hide()
 	})
 	teamLookupNChoice := ""
-	teamLookupNDropDown := widget.NewSelect([]string{"AutoAmps", "AutoSpeaker", "AutoLeave", "TeleopAmps", "TeleopSpeaker", "Penalties", "TechPenalties"}, func(s string) { teamLookupNChoice = s })
+	teamLookupNDropDown := widget.NewSelect([]string{"AutoAmps", "AutoSpeaker", "TeleopAmps", "TeleopSpeaker", "Penalties", "TechPenalties", "GeneralAuto", "GeneralTeleop", "GeneralData"}, func(s string) { teamLookupNChoice = s })
 
 	teamLookupNAverages := widget.NewLabel("")
 	teamLookupNMedians := widget.NewLabel("")
@@ -492,13 +492,18 @@ func main() {
 			"AutoSpeaker":   {},
 			"TeleopAmps":    {},
 			"TeleopSpeaker": {},
+			"Penalties":     {},
+			"TechPenalties": {},
 		}
+		kMatchNum := map[string][]int{}
+		kMatchVAutons := map[string][]int{}
+		kMatchVTeleops := map[string][]int{}
 		if previous != teamLookupNSearch.Text {
 			increments := []chart.Tick{}
 			for i := 1; i < 11; i++ {
 				increments = append(increments, chart.Tick{Value: float64(i), Label: fmt.Sprintf("%.2f", float64(i))})
 			}
-
+			matches := []string{}
 			for _, v := range allData {
 
 				if v.TeamName != teamLookupNSearch.Text || strconv.Itoa(v.TeamNumber) != teamLookupNSearch.Text {
@@ -508,24 +513,49 @@ func main() {
 				datas["AutoSpeaker"] = append(datas["AutoSpeaker"], []int{v.AutoSpeaker, v.MatchNumber})
 				datas["TeleopAmps"] = append(datas["TeleopAmps"], []int{v.TeleopAmps, v.MatchNumber})
 				datas["TeleopSpeaker"] = append(datas["TeleopSpeaker"], []int{v.TeleopSpeaker, v.MatchNumber})
+				datas["Penalties"] = append(datas["Penalties"], []int{v.Penalties, v.MatchNumber})
+				datas["TechPenalties"] = append(datas["TechPenalties"], []int{v.TechPenalties, v.MatchNumber})
+				_, ok := kMatchNum[fmt.Sprintf("%v", v.MatchNumber)]
+				if !ok {
+					kMatchNum[fmt.Sprintf("%v", v.MatchNumber)] = []int{0, 0}
+				}
+				_, ok = kMatchVAutons[fmt.Sprintf("%v", v.MatchNumber)]
+				if !ok {
+					kMatchVAutons[fmt.Sprintf("%v", v.MatchNumber)] = []int{0, 0}
+				}
+				_, ok = kMatchVTeleops[fmt.Sprintf("%v", v.MatchNumber)]
+				if !ok {
+					kMatchVTeleops[fmt.Sprintf("%v", v.MatchNumber)] = []int{0, 0}
+				}
+				kMatchNum[fmt.Sprintf("%v", v.MatchNumber)][0] += v.AutoAmps + v.AutoSpeaker
+				kMatchNum[fmt.Sprintf("%v", v.MatchNumber)][1] += v.TeleopAmps + v.TeleopSpeaker
+				kMatchVAutons[fmt.Sprintf("%v", v.MatchNumber)][0] += v.AutoAmps
+				kMatchVAutons[fmt.Sprintf("%v", v.MatchNumber)][1] += v.AutoSpeaker
+				kMatchVTeleops[fmt.Sprintf("%v", v.MatchNumber)][0] += v.TeleopAmps
+				kMatchVTeleops[fmt.Sprintf("%v", v.MatchNumber)][1] += v.TeleopSpeaker
+
+				//comment node
 				//could use reflection
+
 				for k, v := range datas {
 					sort.Slice(v, func(i, j int) bool {
 						return v[i][1] < v[j][1]
 					})
 					values := []chart.Value{}
 					for _, val := range v {
+						matches = append(matches, fmt.Sprintf("Match %v", val[1]))
 						values = append(values, chart.Value{Value: float64(val[0]), Label: fmt.Sprintf("Match %v (Score: %v)", val[1], val[0])})
 					}
-
 					graph := chart.
 						BarChart{
 						Title: k,
 						Background: chart.Style{
 							Padding: chart.Box{
-								Top:    40,
+								Top:    60,
 								Bottom: 40,
 							},
+							StrokeWidth: 2.0,
+							StrokeColor: chart.ColorBlack,
 						},
 						YAxis: chart.YAxis{
 							Name:      k,
@@ -540,6 +570,72 @@ func main() {
 					bufToWrite, _ := os.Create(fmt.Sprintf("graphs/%v.png", k))
 					_ = graph.Render(chart.PNG, bufToWrite)
 
+				}
+				//kMatchVValues := map[string][]string{}
+
+				all := []chart.StackedBar{}
+				autons := []chart.StackedBar{}
+				teleops := []chart.StackedBar{}
+				for k, v := range kMatchNum {
+					all = append(all, chart.StackedBar{
+						Name:  fmt.Sprintf("Match %v", k),
+						Width: 80,
+						Values: []chart.Value{
+							{Value: float64(v[0]), Label: fmt.Sprintf("Auto %v", v[0]), Style: chart.Style{FillColor: chart.ColorGreen, FontColor: chart.ColorWhite, StrokeColor: chart.ColorBlack}},
+							{Value: float64(v[1]), Label: fmt.Sprintf("Tel %v", v[1]), Style: chart.Style{FillColor: chart.ColorRed, FontColor: chart.ColorWhite, StrokeColor: chart.ColorBlack}},
+						},
+					})
+				}
+				for k, v := range kMatchVAutons {
+					autons = append(autons, chart.StackedBar{
+						Name:  fmt.Sprintf("Match %v", k),
+						Width: 80,
+						Values: []chart.Value{
+							{Value: float64(v[0]), Label: fmt.Sprintf("Amp %v", v[0]), Style: chart.Style{FillColor: chart.ColorYellow, FontColor: chart.ColorWhite, StrokeColor: chart.ColorBlack}},
+							{Value: float64(v[1]), Label: fmt.Sprintf("Sp. %v", v[1]), Style: chart.Style{FillColor: chart.ColorOrange, FontColor: chart.ColorWhite, StrokeColor: chart.ColorBlack}},
+						},
+					})
+				}
+				for k, v := range kMatchVTeleops {
+					teleops = append(teleops, chart.StackedBar{
+						Name:  fmt.Sprintf("Match %v", k),
+						Width: 80,
+						Values: []chart.Value{
+							{Value: float64(v[0]), Label: fmt.Sprintf("Amp %v", v[0]), Style: chart.Style{FillColor: chart.ColorYellow, FontColor: chart.ColorWhite, StrokeColor: chart.ColorBlack}},
+							{Value: float64(v[1]), Label: fmt.Sprintf("Sp. %v", v[1]), Style: chart.Style{FillColor: chart.ColorOrange, FontColor: chart.ColorWhite, StrokeColor: chart.ColorBlack}},
+						},
+					})
+				}
+
+				totals := [][]chart.StackedBar{all, autons, teleops}
+				names := map[int]string{
+					0: "GeneralData",
+					1: "GeneralAuto",
+					2: "GeneralTeleop",
+				}
+				for i, v := range totals {
+					curr := chart.Shown()
+					curr.FontColor = chart.ColorWhite //should get garbage collected
+					sbc := chart.StackedBarChart{
+						Title:      names[i],
+						TitleStyle: curr,
+						Background: chart.Style{
+							Padding: chart.Box{
+								Top:    100,
+								Bottom: 100,
+							},
+							FillColor: chart.ColorWhite,
+						},
+						Height: 612,
+						XAxis: chart.Style{
+							FontColor: chart.ColorWhite,
+						},
+						YAxis:      curr,
+						BarSpacing: 80,
+						Bars:       v,
+					}
+					bufToWrite, _ := os.Create(fmt.Sprintf("graphs/%v.png", names[i]))
+					_ = sbc.Render(chart.PNG, bufToWrite)
 				}
 			}
 			previous = teamLookupNSearch.Text
