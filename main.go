@@ -464,6 +464,37 @@ func main() {
 	teamLookup.Resize(fyne.NewSize(1200, 600))
 	teamLookup.SetFixedSize(true)
 
+	matchLookupN := apptcpjwt.NewWindow("Match Lookup V 2.0")
+	matchLookupN.Resize(fyne.NewSize(1000, 600))
+	matchLookupN.SetCloseIntercept(func() {
+		matchLookupN.Hide()
+	})
+
+	matchLookupNOpen := widget.NewButton("Open match lookup v2.0 jwt", func() {
+		matchLookupN.Show()
+	})
+	matchLookupNSearch := widget.NewEntry()
+	matchLookupNSearch.SetPlaceHolder("Match Number")
+	//matchLookupNAllianceChoice := ""
+	matchLookupNAllianceDropDown := widget.NewSelect([]string{"Blue", "Red"}, func(s string) {
+		//matchLookupNAllianceChoice = s
+	})
+	matchLookupNTeams := []*widget.Label{widget.NewLabel("Ally 1"), widget.NewLabel("Ally 2"), widget.NewLabel("Ally 3")} //pointer to memory
+	matchLookupNScore := []*widget.Label{widget.NewLabel("score"), widget.NewLabel("score"), widget.NewLabel("score")}
+	matchLookupGraphs := []*canvas.Image{canvas.NewImageFromFile("0image.png"), canvas.NewImageFromFile("0image.png"), canvas.NewImageFromFile("0image.png")} //populate
+	for trpc, grpc := range matchLookupGraphs {
+		grpc.FillMode = canvas.ImageFillContain //hopefulyl bny ref
+		grpc.SetMinSize(fyne.NewSize(300, 200))
+		fmt.Println(trpc)
+	}
+	contaOne := container.NewHSplit(matchLookupNSearch, matchLookupNAllianceDropDown)
+	contaOne.SetOffset(0.5)
+	contaTwo := container.NewHSplit(container.NewVBox(container.NewHBox(matchLookupNTeams[0], matchLookupNScore[0]), container.NewHBox(matchLookupNTeams[1], matchLookupNScore[1]), container.NewHBox(matchLookupNTeams[2], matchLookupNScore[2])), container.NewVBox(matchLookupGraphs[0], matchLookupGraphs[1], matchLookupGraphs[2]))
+	contaTwo.SetOffset(1)
+	contaThree := container.NewVSplit(contaOne, contaTwo)
+	contaThree.SetOffset(0)
+	matchLookupN.SetContent(contaThree)
+
 	teamLookupN := apptcpjwt.NewWindow("Team Lookup V 2.0")
 	teamLookupN.Resize(fyne.NewSize(1000, 600))
 	teamLookupN.SetCloseIntercept(func() {
@@ -581,8 +612,8 @@ func main() {
 						Name:  fmt.Sprintf("Match %v", k),
 						Width: 80,
 						Values: []chart.Value{
-							{Value: float64(v[0]), Label: fmt.Sprintf("Auto %v", v[0]), Style: chart.Style{FillColor: chart.ColorGreen, FontColor: chart.ColorWhite, StrokeColor: chart.ColorBlack}},
-							{Value: float64(v[1]), Label: fmt.Sprintf("Tel %v", v[1]), Style: chart.Style{FillColor: chart.ColorRed, FontColor: chart.ColorWhite, StrokeColor: chart.ColorBlack}},
+							{Value: float64(v[0]), Label: fmt.Sprintf("Auto %v", v[0]), Style: chart.Style{FillColor: chart.ColorCyan, FontColor: chart.ColorBlack, StrokeColor: chart.ColorBlack}},
+							{Value: float64(v[1]), Label: fmt.Sprintf("Tel %v", v[1]), Style: chart.Style{FillColor: chart.ColorOrange, FontColor: chart.ColorBlack, StrokeColor: chart.ColorBlack}},
 						},
 					})
 				}
@@ -591,8 +622,9 @@ func main() {
 						Name:  fmt.Sprintf("Match %v", k),
 						Width: 80,
 						Values: []chart.Value{
-							{Value: float64(v[0]), Label: fmt.Sprintf("Amp %v", v[0]), Style: chart.Style{FillColor: chart.ColorYellow, FontColor: chart.ColorWhite, StrokeColor: chart.ColorBlack}},
-							{Value: float64(v[1]), Label: fmt.Sprintf("Sp. %v", v[1]), Style: chart.Style{FillColor: chart.ColorOrange, FontColor: chart.ColorWhite, StrokeColor: chart.ColorBlack}},
+							//lld linker ref
+							{Value: float64(v[0]), Label: fmt.Sprintf("Amp %v", v[0]), Style: chart.Style{FillColor: chart.ColorBlack, FontColor: chart.ColorWhite, StrokeColor: chart.ColorBlack}},
+							{Value: float64(v[1]), Label: fmt.Sprintf("Sp. %v", v[1]), Style: chart.Style{FillColor: chart.ColorWhite, FontColor: chart.ColorBlack, StrokeColor: chart.ColorBlack}},
 						},
 					})
 				}
@@ -601,8 +633,8 @@ func main() {
 						Name:  fmt.Sprintf("Match %v", k),
 						Width: 80,
 						Values: []chart.Value{
-							{Value: float64(v[0]), Label: fmt.Sprintf("Amp %v", v[0]), Style: chart.Style{FillColor: chart.ColorYellow, FontColor: chart.ColorWhite, StrokeColor: chart.ColorBlack}},
-							{Value: float64(v[1]), Label: fmt.Sprintf("Sp. %v", v[1]), Style: chart.Style{FillColor: chart.ColorOrange, FontColor: chart.ColorWhite, StrokeColor: chart.ColorBlack}},
+							{Value: float64(v[0]), Label: fmt.Sprintf("Amp %v", v[0]), Style: chart.Style{FillColor: chart.ColorBlack, FontColor: chart.ColorWhite, StrokeColor: chart.ColorBlack}},
+							{Value: float64(v[1]), Label: fmt.Sprintf("Sp. %v", v[1]), Style: chart.Style{FillColor: chart.ColorWhite, FontColor: chart.ColorBlack, StrokeColor: chart.ColorBlack}},
 						},
 					})
 				}
@@ -621,6 +653,7 @@ func main() {
 						TitleStyle: curr,
 						Background: chart.Style{
 							Padding: chart.Box{
+								//lld linker
 								Top:    100,
 								Bottom: 100,
 							},
@@ -1179,7 +1212,7 @@ func main() {
 			}, current)
 			//llvm
 			llvm.Show()
-		}), widget.NewButtonWithIcon("Import", theme.InfoIcon(), func() {
+		}), matchLookupNOpen, widget.NewButtonWithIcon("Import", theme.InfoIcon(), func() {
 			//mut value allocated
 			jwtauth := dialog.NewFolderOpen(func(reader fyne.ListableURI, err error) {
 				if err == nil && reader != nil {
