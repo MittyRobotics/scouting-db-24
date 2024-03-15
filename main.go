@@ -479,6 +479,8 @@ func main() {
 	matchLookupNAllianceDropDown := widget.NewSelect([]string{"Blue", "Red"}, func(s string) {
 		//matchLookupNAllianceChoice = s
 	})
+
+	
 	matchLookupNTeams := []*widget.Label{widget.NewLabel("Ally 1"), widget.NewLabel("Ally 2"), widget.NewLabel("Ally 3")} //pointer to memory
 	matchLookupNScore := []*widget.Label{widget.NewLabel("score"), widget.NewLabel("score"), widget.NewLabel("score")}
 	matchLookupGraphs := []*canvas.Image{canvas.NewImageFromFile("0image.png"), canvas.NewImageFromFile("0image.png"), canvas.NewImageFromFile("0image.png")} //populate
@@ -487,11 +489,26 @@ func main() {
 		grpc.SetMinSize(fyne.NewSize(300, 200))
 		fmt.Println(trpc)
 	}
+
+	matchLookupNButton := widget.NewButtonWithIcon("clojure", theme.ColorPaletteIcon(), func() {
+		teams := matchIndex[matchLookupNSearch.Text]
+		for allyind, team := range teams {
+			for _, entry := range allData {
+				if strconv.Itoa(entry.TeamNumber) == team && strconv.Itoa(entry.MatchNumber) == matchLookupNSearch.Text {
+					fmt.Println(allyind)
+					matchLookupNTeams[allyind].SetText(team)
+					amqp := entry.TeleopAmps + entry.TeleopSpeaker
+					mqtt := entry.AutoAmps + entry.AutoSpeaker
+					matchLookupNScore[allyind].SetText(fmt.Sprintf("Teleop %v, Auton %v, Total %v", amqp, mqtt, amqp+mqtt))
+				}
+			}                                        
+		}
+	})
 	contaOne := container.NewHSplit(matchLookupNSearch, matchLookupNAllianceDropDown)
 	contaOne.SetOffset(0.5)
 	contaTwo := container.NewHSplit(container.NewVBox(container.NewHBox(matchLookupNTeams[0], matchLookupNScore[0]), container.NewHBox(matchLookupNTeams[1], matchLookupNScore[1]), container.NewHBox(matchLookupNTeams[2], matchLookupNScore[2])), container.NewVBox(matchLookupGraphs[0], matchLookupGraphs[1], matchLookupGraphs[2]))
 	contaTwo.SetOffset(1)
-	contaThree := container.NewVSplit(contaOne, contaTwo)
+	contaThree := container.NewVSplit(container.NewVBox(contaOne, matchLookupNButton), contaTwo)
 	contaThree.SetOffset(0)
 	matchLookupN.SetContent(contaThree)
 
